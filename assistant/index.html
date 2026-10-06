@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Build Assistant — Quick Links</title>
+    <meta name="description" content="AI Build Assistant: Describe what you want to build and get recommended stacks, architecture, toolbox matches, workflows, and AI coding prompts.">
+    <link rel="stylesheet" href="assistant.css">
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header class="assistant-header">
+        <div class="header-inner">
+            <div class="brand-group">
+                <a href="../" class="back-link" title="Return to Developer Toolbox" aria-label="Return to Developer Toolbox">
+                    <span class="back-arrow">←</span>
+                    <span class="back-label">Toolbox</span>
+                </a>
+                <div class="divider-slash">/</div>
+                <div class="brand">
+                    <span class="brand-icon">✦</span>
+                    <div>
+                        <h1>AI Build Assistant</h1>
+                        <p class="brand-sub">Quick Links Tech Radar</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-meta">
+                <span class="status-pill">
+                    <span class="pulse-dot"></span>
+                    <span id="modelIndicator">Gemini Flash</span>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= MAIN CONTENT ================= -->
+    <main class="assistant-main">
+
+        <!-- HERO / INTRO -->
+        <section class="assistant-hero">
+            <div class="hero-badge">
+                <span class="badge-icon">⚡</span>
+                <span>INTELLIGENT ARCHITECTURE & STACK MATCHER</span>
+            </div>
+            <h2>
+                What are you building?<br>
+                <span>I'll craft your stack, tools & workflow.</span>
+            </h2>
+            <p class="hero-desc">
+                Describe your project, feature, or tool requirements. The assistant synthesizes your ideal stack, matches tools from your personal Quick Links toolbox, and generates ready-to-use AI coding prompts.
+            </p>
+        </section>
+
+        <!-- ASSISTANT 2-COLUMN WORKSPACE -->
+        <div class="workspace-grid-layout">
+
+            <!-- LEFT / MAIN WORKSPACE COLUMN -->
+            <div class="workspace-main-column">
+
+                <!-- 1. DESCRIPTION / PROMPT INPUT CONTAINER -->
+                <div class="prompt-box" id="promptBox">
+                    <div class="prompt-box-header">
+                        <span class="box-label">PROJECT DESCRIPTION</span>
+                    </div>
+
+                    <div class="prompt-textarea-wrapper">
+                        <textarea 
+                            id="promptInput" 
+                            rows="4" 
+                            placeholder="Tell me what you want to build... (e.g. 'I want an e-commerce web app with cool product cards and scrolling effects' or 'I need authentication and database for a SaaS')"
+                            aria-label="Describe what you want to build"
+                            autocomplete="off"
+                            spellcheck="false"
+                        ></textarea>
+                    </div>
+
+                    <!-- ACTIONS BAR -->
+                    <div class="prompt-actions">
+                        <div class="shortcuts-hint">
+                            <span><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to generate</span>
+                            <span>•</span>
+                            <span><kbd>Esc</kbd> to clear</span>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="button" id="clearBtn" class="btn-secondary" title="Clear input">
+                                Clear
+                            </button>
+                            <button type="button" id="generateBtn" class="btn-primary">
+                                <span class="btn-text">Generate Plan →</span>
+                                <span class="btn-spinner" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROCESSING / LOADING STATE -->
+                <div id="loadingState" class="processing-card hidden" aria-live="polite">
+                    <div class="processing-spinner">
+                        <div class="pulse-ring"></div>
+                        <div class="pulse-core">✦</div>
+                    </div>
+
+                    <div class="processing-content">
+                        <h3 id="loadingStepTitle">Analyzing your idea...</h3>
+                        <p id="loadingStepSub">Evaluating technical requirements and architectural trade-offs</p>
+                        
+                        <div class="progress-bar-track">
+                            <div id="progressBar" class="progress-bar-fill"></div>
+                        </div>
+
+                        <div class="steps-indicator">
+                            <span class="step-dot active" id="dot1" title="Analyze idea"></span>
+                            <span class="step-line"></span>
+                            <span class="step-dot" id="dot2" title="Choose architecture"></span>
+                            <span class="step-line"></span>
+                            <span class="step-dot" id="dot3" title="Match toolbox"></span>
+                            <span class="step-line"></span>
+                            <span class="step-dot" id="dot4" title="Build workflow"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ERROR NOTIFICATION -->
+                <div id="errorState" class="error-banner hidden" role="alert">
+                    <span class="error-icon">⚠️</span>
+                    <div class="error-msg" id="errorMsgText">Something went wrong. Please try again.</div>
+                    <button type="button" id="dismissErrorBtn" class="dismiss-btn" aria-label="Dismiss error">✕</button>
+                </div>
+
+                <!-- 2. RESULTS CONTAINER (RIGHT AFTER DESCRIPTION) -->
+                <div id="resultsContainer" class="results-container hidden">
+
+                    <!-- RESULTS NAVBAR (Below description box as requested) -->
+                    <div class="results-navbar-wrap">
+                        <span class="results-nav-eyebrow">Results:</span>
+                        <div class="results-navbar" role="tablist" aria-label="Results view tabs">
+                            <button type="button" class="res-tab active" data-tab="stack" role="tab" aria-selected="true" aria-controls="paneStack">
+                                <span class="tab-badge">A</span>
+                                <span class="tab-label">Recommended Stack</span>
+                            </button>
+                            <button type="button" class="res-tab" data-tab="tools" role="tab" aria-selected="false" aria-controls="paneTools">
+                                <span class="tab-badge">B</span>
+                                <span class="tab-label">Find Tools</span>
+                            </button>
+                            <button type="button" class="res-tab" data-tab="workflow" role="tab" aria-selected="false" aria-controls="paneWorkflow">
+                                <span class="tab-badge">C</span>
+                                <span class="tab-label">Create Workflow</span>
+                            </button>
+                            <button type="button" class="res-tab" data-tab="prompt" role="tab" aria-selected="false" aria-controls="panePrompt">
+                                <span class="tab-badge">D</span>
+                                <span class="tab-label">Generate Prompt</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- NOTICE (if fallback heuristic mode) -->
+                    <div id="fallbackNotice" class="fallback-callout hidden">
+                        <span class="callout-icon">ℹ️</span>
+                        <div id="fallbackNoticeText">Operating in heuristic toolbox matching mode. Add GEMINI_API_KEY to your .env to unlock full generative intelligence.</div>
+                    </div>
+
+                    <!-- TAB CONTENT PANES -->
+                    <div class="results-tab-content">
+
+                        <!-- TAB PANE A: RECOMMENDED STACK -->
+                        <div id="paneStack" class="tab-pane active" role="tabpanel">
+                            <div class="pane-header">
+                                <div class="pane-title-group">
+                                    <span class="pane-tag">BLUEPRINT & ARCHITECTURE</span>
+                                    <h3>🧱 Recommended Tech Stack</h3>
+                                    <p class="pane-desc">Battle-tested, cohesive technologies selected specifically for this architecture with concrete technical rationales.</p>
+                                </div>
+                            </div>
+                            <div id="stackGrid" class="stack-grid">
+                                <!-- Filled dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- TAB PANE B: FIND TOOLS (MATCHED TOOLBOX TOOLS WITH REASONS) -->
+                        <div id="paneTools" class="tab-pane" role="tabpanel">
+                            <div class="pane-header">
+                                <div class="pane-title-group">
+                                    <span class="pane-tag">CURATED TOOLBOX</span>
+                                    <h3>🧰 Best Tools for This Project</h3>
+                                    <p class="pane-desc">Direct matches from your personal 61-item Quick Links toolbox, with specific reasons why each tool was selected.</p>
+                                </div>
+                            </div>
+                            <div id="matchedToolsGrid" class="matched-tools-grid">
+                                <!-- Filled dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- TAB PANE C: CREATE WORKFLOW (EXPANDED PHASES) -->
+                        <div id="paneWorkflow" class="tab-pane" role="tabpanel">
+                            <div class="pane-header">
+                                <div class="pane-title-group">
+                                    <span class="pane-tag">EXECUTION ROADMAP</span>
+                                    <h3>🔄 Recommended Workflow Pipeline</h3>
+                                    <p class="pane-desc">Structured, sequential implementation phases from architecture scaffolding to production polish.</p>
+                                </div>
+                            </div>
+                            <div id="workflowTimeline" class="workflow-timeline">
+                                <!-- Filled dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- TAB PANE D: GENERATE CODING PROMPT (EXPANDED, READY-TO-USE) -->
+                        <div id="panePrompt" class="tab-pane" role="tabpanel">
+                            <div class="pane-header prompt-header-row">
+                                <div class="pane-title-group">
+                                    <span class="pane-tag">AI SPECIFICATION</span>
+                                    <h3>🤖 Ready-to-Use Coding Prompt</h3>
+                                    <p class="pane-desc">Full-length prompt specification ready to paste directly into Cursor, Claude 3.7, ChatGPT, or Gemini.</p>
+                                </div>
+                                <button type="button" id="copyPromptBtn" class="copy-btn">
+                                    <span class="copy-icon">📋</span>
+                                    <span id="copyBtnText">Copy Prompt</span>
+                                </button>
+                            </div>
+                            <pre class="prompt-code-block"><code id="resultCodingPrompt"></code></pre>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT PANE (FIXED / STICKY ON DESKTOP) -->
+            <aside class="workspace-right-pane" id="workspaceRightPane">
+
+                <!-- 1. PROJECT OVERVIEW & ARCHITECTURE CARD -->
+                <div class="right-pane-card overview-card">
+                    <div class="side-card-header">
+                        <span class="side-card-tag">SYSTEM BRIEF</span>
+                        <h4>✨ Project Architecture</h4>
+                    </div>
+                    <p id="resultSummary" class="side-summary-text">
+                        Enter your project description and click Generate to see the architectural overview.
+                    </p>
+                    
+                    <div class="architecture-sub-box">
+                        <div class="arch-mini-label">DATA & RUNTIME PATTERN</div>
+                        <p id="resultArchitecture" class="side-arch-text">
+                            Waiting for project generation...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. NEXT STEPS CHECKLIST -->
+                <div class="right-pane-card steps-card">
+                    <div class="side-card-header">
+                        <span class="side-card-tag">CHECKLIST</span>
+                        <h4>🚀 Next Steps</h4>
+                    </div>
+                    <ul id="nextStepsList" class="side-steps-list">
+                        <li>
+                            <span class="next-step-number">1</span>
+                            <span>Enter what you want to build</span>
+                        </li>
+                        <li>
+                            <span class="next-step-number">2</span>
+                            <span>Review stack and matched tools</span>
+                        </li>
+                        <li>
+                            <span class="next-step-number">3</span>
+                            <span>Copy prompt into Cursor / Claude</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 3. QUICK IDEA TEMPLATES (Placed in right pane to keep main view clean) -->
+                <div class="right-pane-card templates-card">
+                    <div class="side-card-header">
+                        <span class="side-card-tag">INSPIRATION</span>
+                        <h4>💡 Quick Ideas</h4>
+                    </div>
+                    <div class="chips-list">
+                        <button type="button" class="chip" data-prompt="I want an e-commerce web app with cool product cards and scrolling effects">
+                            E-Commerce with 3D cards
+                        </button>
+                        <button type="button" class="chip" data-prompt="I want to build a portfolio website with 3D animations and smooth interactions.">
+                            3D Portfolio
+                        </button>
+                        <button type="button" class="chip" data-prompt="I want to build a SaaS application with authentication, Stripe payments, and transactional email.">
+                            AI SaaS Platform
+                        </button>
+                        <button type="button" class="chip" data-prompt="I want to build a real-time analytics dashboard with charts and dark mode.">
+                            Real-time Dashboard
+                        </button>
+                        <button type="button" class="chip" data-prompt="I need a beautiful animated navbar and hero section for a Next.js website.">
+                            Animated Navbar & Hero
+                        </button>
+                        <button type="button" class="chip" data-prompt="I need a database and authentication for a small Next.js SaaS.">
+                            Database + Auth for SaaS
+                        </button>
+                    </div>
+                </div>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="assistant-footer">
+        <div class="footer-inner">
+            <p>
+                Powered by <strong>Quick Links</strong> & <strong>Google Gemini Flash</strong>
+            </p>
+            <div class="footer-links">
+                <a href="../">Toolbox</a>
+                <span>•</span>
+                <a href="../#filters">Categories</a>
+                <span>•</span>
+                <span>2026</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Shared Resources Database (authoritative single source of truth) -->
+    <script src="../data/resources.js"></script>
+    <!-- Assistant Client Controller -->
+    <script src="assistant.js"></script>
+</body>
+</html>
