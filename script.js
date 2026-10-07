@@ -514,6 +514,63 @@ document.addEventListener(
 
 
 /* =====================================================
+   FOOTER STORY INTERACTION
+===================================================== */
+
+function setupFooterStory() {
+    const storyToggleBtn = document.getElementById("storyToggleBtn");
+    const storyExpandWrapper = document.getElementById("storyExpandWrapper");
+    const startBuildingBtn = document.getElementById("startBuildingBtn");
+
+    if (!storyToggleBtn || !storyExpandWrapper) return;
+
+    const labelSpan = storyToggleBtn.querySelector(".story-toggle-label");
+    const arrowSpan = storyToggleBtn.querySelector(".story-toggle-arrow");
+
+    function setStoryState(expanded) {
+        if (expanded) {
+            storyExpandWrapper.classList.add("expanded");
+            storyExpandWrapper.setAttribute("aria-hidden", "false");
+            storyToggleBtn.setAttribute("aria-expanded", "true");
+            if (labelSpan) labelSpan.textContent = "Show less";
+            if (arrowSpan) arrowSpan.textContent = "↑";
+        } else {
+            storyExpandWrapper.classList.remove("expanded");
+            storyExpandWrapper.setAttribute("aria-hidden", "true");
+            storyToggleBtn.setAttribute("aria-expanded", "false");
+            if (labelSpan) labelSpan.textContent = "More about why I built this";
+            if (arrowSpan) arrowSpan.textContent = "→";
+        }
+    }
+
+    storyToggleBtn.addEventListener("click", () => {
+        const isCurrentlyExpanded = storyExpandWrapper.classList.contains("expanded");
+        setStoryState(!isCurrentlyExpanded);
+    });
+
+    if (startBuildingBtn) {
+        startBuildingBtn.addEventListener("click", () => {
+            // 1. Collapse the story
+            setStoryState(false);
+
+            // 2. Smoothly scroll back to the resources/toolbox section
+            const targetSection = document.getElementById("resourcesSection") || document.querySelector(".search-section");
+            if (targetSection) {
+                targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+
+            // 3. Focus search input for immediate building
+            setTimeout(() => {
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }, 600);
+        });
+    }
+}
+
+
+/* =====================================================
    INITIALIZE
 ===================================================== */
 
@@ -526,5 +583,7 @@ renderResources();
 renderCoreStack();
 
 setupRadarInteractions();
+
+setupFooterStory();
 
 })();

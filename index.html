@@ -254,17 +254,196 @@
     </a>
 
 
-    <!-- ================= FOOTER ================= -->
+    <!-- ================= PERSONAL / STORY FOOTER ================= -->
 
-    <footer>
+    <footer class="site-footer" id="storyFooter">
 
-        <p>
-            Built for <strong>building.</strong>
-        </p>
+        <div class="footer-ambient-glow" aria-hidden="true"></div>
 
-        <span>
-            quick-links · 2026
-        </span>
+        <div class="footer-inner">
+
+            <!-- WHY I BUILT THIS SECTION -->
+            <section class="footer-story-section" aria-labelledby="storyHeading">
+
+                <div class="story-teaser-card">
+                    <span class="story-eyebrow" id="storyHeading">WHY I BUILT THIS</span>
+
+                    <h2 class="story-hook-title">
+                        Ever spent more time choosing your stack<br>
+                        than building the actual thing?
+                    </h2>
+
+                    <p class="story-hook-subtitle">Yeah. Me too.</p>
+
+                    <button 
+                        type="button" 
+                        class="story-toggle-btn" 
+                        id="storyToggleBtn" 
+                        aria-expanded="false" 
+                        aria-controls="storyExpandWrapper"
+                    >
+                        <span class="story-toggle-label">More about why I built this</span>
+                        <span class="story-toggle-arrow">→</span>
+                    </button>
+                </div>
+
+                <!-- EXPANDABLE FULL STORY -->
+                <div class="story-expand-wrapper" id="storyExpandWrapper" aria-hidden="true">
+                    <div class="story-expand-inner">
+                        <div class="story-content-card">
+
+                            <div class="story-prose">
+                                <p class="story-lead">I kept running into the same problem.</p>
+
+                                <p>
+                                    I wanted to build modern websites — the kind that feel polished,
+                                    interactive, and actually fun to use.
+                                </p>
+
+                                <p class="story-prompt">
+                                    But before I could build anything, I'd end up asking:
+                                </p>
+
+                                <ul class="story-questions-grid">
+                                    <li><span class="q-bullet">?</span> Which UI library?</li>
+                                    <li><span class="q-bullet">?</span> Which animation library?</li>
+                                    <li><span class="q-bullet">?</span> Which database?</li>
+                                    <li><span class="q-bullet">?</span> Which backend?</li>
+                                    <li><span class="q-bullet">?</span> Which AI tool?</li>
+                                    <li><span class="q-bullet">?</span> Which deployment platform?</li>
+                                </ul>
+
+                                <p class="story-breakout">And then came the rabbit hole.</p>
+
+                                <div class="story-rabbit-hole">
+                                    <p>One website led to another.</p>
+                                    <p>One GitHub repo led to another.</p>
+                                    <p>20 browser tabs later, I was still deciding what stack to use.</p>
+                                </div>
+
+                                <p class="story-turning-point">
+                                    I wasn't building anymore. <em>I was choosing.</em>
+                                </p>
+
+                                <p>
+                                    So I started collecting the tools I actually liked using —
+                                    and more importantly, <strong>when and why I'd use them</strong>.
+                                </p>
+
+                                <p>
+                                    Quick Links grew from that idea.
+                                </p>
+
+                                <p>
+                                    It's not meant to be another giant directory of developer resources.
+                                </p>
+
+                                <div class="story-callout-pill">
+                                    <span>It's my decision-making toolbox.</span>
+                                </div>
+
+                                <p class="story-contrast-lead">A place where you can come in with:</p>
+
+                                <div class="story-transformation-flow">
+                                    <div class="flow-step flow-in">
+                                        <span class="flow-label">YOU ENTER WITH</span>
+                                        <div class="flow-quote">&ldquo;I want to build a 3D website.&rdquo;</div>
+                                    </div>
+                                    <div class="flow-arrow" aria-hidden="true">↓</div>
+                                    <div class="flow-step flow-out">
+                                        <span class="flow-label">YOU LEAVE WITH</span>
+                                        <div class="flow-quote">&ldquo;Okay. Spline + Three.js + Motion. Let's build.&rdquo;</div>
+                                    </div>
+                                </div>
+
+                                <p class="story-resolution">
+                                    So if you've ever been stuck wondering &ldquo;what should I use?&rdquo;
+                                </p>
+
+                                <p class="story-for-you">
+                                    You're probably exactly who I built this for. ⚡
+                                </p>
+                            </div>
+
+                            <!-- STORY ENDING & PHILOSOPHY -->
+                            <div class="story-closing-block">
+                                <div class="story-philosophy">
+                                    <div class="philosophy-line">Less time choosing.</div>
+                                    <div class="philosophy-line highlight">More time building.</div>
+                                </div>
+
+                                <div class="story-cta-action">
+                                    <span class="personality-cta-text">Now thank me later.</span>
+                                    <button 
+                                        type="button" 
+                                        class="start-building-cta-btn" 
+                                        id="startBuildingBtn" 
+                                        aria-label="Start building and scroll to developer toolbox"
+                                    >
+                                        <span>Start building.</span>
+                                        <span class="btn-lightning">⚡</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- FOOTER DIVIDER -->
+            <div class="footer-divider" aria-hidden="true"></div>
+
+            <!-- FOOTER BOTTOM: BRAND, MICROCOPY, GITHUB LINKS -->
+            <div class="footer-bottom-bar">
+
+                <div class="footer-brand-meta">
+                    <div class="footer-logo-row">
+                        <img src="logo.png" alt="Quick Links Logo" class="footer-logo-img">
+                        <span class="footer-logo-name">Quick Links</span>
+                        <span class="footer-brand-badge">⚡</span>
+                    </div>
+                    <p class="footer-microcopy">Made for developers who'd rather build than browse.</p>
+                </div>
+
+                <div class="footer-credits-links">
+                    <div class="built-by-tag">
+                        <span>Built by</span>
+                        <a 
+                            href="https://github.com/saivallabha37" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            class="author-profile-link"
+                            aria-label="Sai on GitHub"
+                        >
+                            Sai
+                        </a>
+                    </div>
+
+                    <div class="footer-nav-links">
+                        <a 
+                            href="https://github.com/saivallabha37" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            class="footer-external-link"
+                        >
+                            GitHub Profile →
+                        </a>
+                        <a 
+                            href="https://github.com/saivallabha37/quick-links" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            class="footer-external-link"
+                        >
+                            Quick Links Repository →
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
 
     </footer>
 
