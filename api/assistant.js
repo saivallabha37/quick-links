@@ -37,184 +37,491 @@ try {
     }
 }
 
-// Fallback matching engine for offline scenarios with rich, expanded output
+/**
+ * Intelligent heuristic fallback engine that acts as a Senior Software Architect
+ * and Archetype Analyzer for offline / missing API key scenarios.
+ */
 function generateFallbackResponse(description, mode = 'stack') {
     const descLower = description.toLowerCase();
-    
-    // Score each resource based on relevance
-    const matched = [];
-    resourcesDb.forEach(res => {
-        let score = 0;
-        const nameLower = res.name.toLowerCase();
-        const catLower = res.category.toLowerCase();
-        const descWords = (res.description + ' ' + res.useWhen + ' ' + res.worksWith.join(' ')).toLowerCase();
-        
-        if (descLower.includes(nameLower)) score += 15;
-        if (descLower.includes(catLower)) score += 8;
-        
-        // Keyword associations
-        if ((descLower.includes('3d') || descLower.includes('three')) && (res.category === '3d' || nameLower.includes('three') || nameLower.includes('spline'))) score += 12;
-        if ((descLower.includes('animat') || descLower.includes('motion') || descLower.includes('scroll')) && (res.category === 'animation' || nameLower.includes('motion') || nameLower.includes('gsap'))) score += 12;
-        if ((descLower.includes('auth') || descLower.includes('login') || descLower.includes('user')) && (res.category === 'auth' || nameLower.includes('clerk') || nameLower.includes('better auth'))) score += 12;
-        if ((descLower.includes('db') || descLower.includes('database') || descLower.includes('store') || descLower.includes('sql') || descLower.includes('product') || descLower.includes('cart')) && (res.category === 'database' || nameLower.includes('supabase') || nameLower.includes('mongo') || nameLower.includes('prisma'))) score += 12;
-        if ((descLower.includes('ai') || descLower.includes('bot') || descLower.includes('chat') || descLower.includes('llm') || descLower.includes('prompt')) && (res.category === 'ai' || nameLower.includes('openai') || nameLower.includes('google ai') || nameLower.includes('hugging'))) score += 12;
-        if ((descLower.includes('ui') || descLower.includes('component') || descLower.includes('navbar') || descLower.includes('card') || descLower.includes('shop') || descLower.includes('landing') || descLower.includes('hero')) && (res.category === 'ui' || res.category === 'visuals')) score += 10;
-        if ((descLower.includes('deploy') || descLower.includes('host') || descLower.includes('prod')) && res.category === 'deployment') score += 8;
-        if (descLower.includes('icon') && res.category === 'icons') score += 8;
-        
-        // Word matches
-        const queryWords = descLower.split(/\W+/).filter(w => w.length > 2);
-        queryWords.forEach(word => {
-            if (nameLower.includes(word)) score += 4;
-            if (descWords.includes(word)) score += 2;
+
+    // 1. Detect explicit preferences
+    const wantsPython = descLower.includes('python') || descLower.includes('fastapi') || descLower.includes('django') || descLower.includes('flask');
+    const wantsMongo = descLower.includes('mongo') || descLower.includes('mongodb');
+    const wantsPostgres = descLower.includes('postgres') || descLower.includes('postgresql') || descLower.includes('supabase') || descLower.includes('neon');
+    const wantsVue = descLower.includes('vue') || descLower.includes('nuxt');
+    const wantsSvelte = descLower.includes('svelte') || descLower.includes('sveltekit');
+
+    // 2. Detect project archetypes
+    const is3D = descLower.includes('3d') || descLower.includes('three') || descLower.includes('threejs') || descLower.includes('spline') || descLower.includes('canvas') || descLower.includes('portfolio') && (descLower.includes('motion') || descLower.includes('animat'));
+    const isAI = descLower.includes('ai') || descLower.includes('llm') || descLower.includes('chat') || descLower.includes('gpt') || descLower.includes('rag') || descLower.includes('document') || descLower.includes('vector') || descLower.includes('embedding') || descLower.includes('agent');
+    const isEcom = descLower.includes('shop') || descLower.includes('e-commerce') || descLower.includes('ecommerce') || descLower.includes('cart') || descLower.includes('product') || descLower.includes('store');
+    const isSaaS = descLower.includes('saas') || descLower.includes('subscription') || descLower.includes('billing') || descLower.includes('stripe') || descLower.includes('tenant') || descLower.includes('b2b');
+    const isDashboard = descLower.includes('dashboard') || descLower.includes('analytics') || descLower.includes('metrics') || descLower.includes('chart') || descLower.includes('realtime') || descLower.includes('real-time');
+    const isEvent = descLower.includes('event') || descLower.includes('campus') || descLower.includes('ticket') || descLower.includes('registration') || descLower.includes('attendee');
+
+    let appType = "Full-Stack Web Application";
+    let targetUsers = "End-users, developers and consumers";
+    if (is3D) {
+        appType = "Interactive 3D Portfolio & Creative Showcase";
+        targetUsers = "Prospective clients, recruiters, and creative developers";
+    } else if (isAI) {
+        appType = "AI-Powered Intelligence / RAG Document Application";
+        targetUsers = "Knowledge workers, researchers, and productivity-focused users";
+    } else if (isEcom) {
+        appType = "Modern E-Commerce Storefront & Checkout";
+        targetUsers = "Online shoppers, retail customers, and store managers";
+    } else if (isSaaS) {
+        appType = "B2B / Multi-Tenant SaaS Platform";
+        targetUsers = "Subscribers, team admins, and business operators";
+    } else if (isDashboard) {
+        appType = "Real-Time Data Analytics & Operational Dashboard";
+        targetUsers = "Analysts, product managers, and operations teams";
+    } else if (isEvent) {
+        appType = "Campus & Community Event Management Platform";
+        targetUsers = "Event organizers, attendees, and community members";
+    }
+
+    // 3. Assemble coherent stack layers with technical rationale, priority, and source
+    const stack = [];
+
+    // Frontend Layer
+    if (wantsVue) {
+        stack.push({
+            name: "Nuxt 3 (Vue 3 + Vite)",
+            category: "Frontend Framework",
+            purpose: "Full-stack SSR Vue framework with file-system routing",
+            reason: `Directly honors your explicit preference for Vue. Provides auto-imports, SSR hydration, and built-in Nitro server engine.`,
+            priority: "required",
+            source: "external",
+            alternative: "Next.js 15",
+            alternativeWhen: "Use if enterprise React ecosystem compatibility is mandatory."
         });
-        
-        if (score > 0) {
-            matched.push({ resource: res, score });
-        }
+    } else if (wantsSvelte) {
+        stack.push({
+            name: "SvelteKit (Svelte 5)",
+            category: "Frontend Framework",
+            purpose: "Compiler-driven reactive web framework",
+            reason: `Directly honors your explicit preference for Svelte. Offers minimal runtime footprint and buttery-smooth reactivity.`,
+            priority: "required",
+            source: "external",
+            alternative: "Next.js 15",
+            alternativeWhen: "Use if broader third-party component library ecosystem is required."
+        });
+    } else {
+        stack.push({
+            name: "Next.js 15 (App Router & React 19)",
+            category: "Frontend Framework",
+            purpose: "Production web architecture with hybrid Server Components & client hydration",
+            reason: `Provides zero-bundle-size React Server Components for lightning-fast First Contentful Paint, streaming SSR, and optimized asset bundling for ${appType}.`,
+            priority: "required",
+            source: "quick-links",
+            alternative: "Vite + React 19 SPA",
+            alternativeWhen: "Use if the app is strictly an internal behind-login tool with zero SEO requirements."
+        });
+    }
+
+    // UI & Design System
+    stack.push({
+        name: "shadcn/ui + Tailwind CSS",
+        category: "UI & Design System",
+        purpose: "Headless, accessible Radix UI primitives styled with utility-first CSS",
+        reason: `Gives full code ownership without bloated npm runtime dependencies. Perfectly suited for dark-mode developer aesthetics, high-contrast states, and responsive accessibility.`,
+        priority: "recommended",
+        source: "quick-links",
+        alternative: "Tailwind UI / Catalyst",
+        alternativeWhen: "Use if pre-built proprietary commercial layout kits are preferred over open-source primitives."
     });
-    
-    matched.sort((a, b) => b.score - a.score);
-    const topMatches = matched.slice(0, 8).map(m => {
-        const r = m.resource;
-        let detailedReason = `Specifically selected because ${r.name} provides ${r.description.toLowerCase()}. Perfect for your project's requirement: "${r.useWhen}". Integrates seamlessly with ${r.worksWith.join(', ')} without bloated overhead.`;
-        return {
-            name: r.name,
-            category: r.category,
-            reason: detailedReason,
-            url: r.url,
-            icon: r.icon,
-            tag: r.tag,
-            tagClass: r.tagClass,
-            worksWith: r.worksWith
-        };
-    });
-    
-    const is3D = descLower.includes('3d') || descLower.includes('canvas') || descLower.includes('game');
-    const isAI = descLower.includes('ai') || descLower.includes('llm') || descLower.includes('chat') || descLower.includes('gpt');
-    const isEcom = descLower.includes('shop') || descLower.includes('e-commerce') || descLower.includes('ecommerce') || descLower.includes('cart') || descLower.includes('product');
-    const isSaaS = descLower.includes('saas') || descLower.includes('payment') || descLower.includes('billing') || descLower.includes('subscription');
-    
-    const stack = [
-        { 
-            category: "Frontend Framework", 
-            name: "Next.js 15 (App Router & Server Components)", 
-            reason: "Next.js 15 provides blazing fast hybrid rendering (SSR/SSG), nested layouts, and automatic route prefetching. Server Components ensure zero-bundle-size rendering for content and product displays while keeping client hydration lean." 
-        },
-        { 
-            category: "UI & Design System", 
-            name: "shadcn/ui + Tailwind CSS", 
-            reason: "shadcn/ui gives you fully accessible Radix UI primitives with complete source code ownership. Tailwind CSS enables expressive, dark-mode-first styling with zero runtime CSS-in-JS overhead." 
-        },
-        { 
-            category: "Animation & Motion Engine", 
-            name: is3D ? "Spline + Motion (Framer Motion)" : "Motion (Framer Motion)", 
-            reason: "Declarative spring physics and scroll-linked animations (`useScroll`, `useTransform`). Delivers silky smooth card hover states, stagger entrance transitions, and viewport-triggered reveals without compromising 60 FPS performance." 
-        },
-        { 
-            category: "Backend & Server Runtime", 
-            name: "Next.js Route Handlers & Server Actions", 
-            reason: "Type-safe RPC execution via Server Actions eliminating the need for boilerplate REST controllers. Runs at the edge or serverless Node.js with built-in request caching and revalidation." 
-        },
-        { 
-            category: "Database & ORM", 
-            name: "Supabase (PostgreSQL) + Prisma ORM", 
-            reason: "Managed enterprise-grade PostgreSQL with instant connection pooling via PgBouncer. Prisma provides end-to-end TypeScript schema safety, migrations, and intuitive relations." 
-        },
-        { 
-            category: "Authentication & Identity", 
-            name: isSaaS || isEcom ? "Clerk Authentication" : "Supabase Auth", 
-            reason: "Frictionless multi-tenant identity with social OAuth, session tokens, and ready-to-use user profile modals. Eliminates security vulnerabilities while supporting webhook synchronization." 
-        },
-        { 
-            category: "Deployment & Edge Infrastructure", 
-            name: "Vercel Edge Platform", 
-            reason: "Zero-configuration continuous deployment from Git with preview environments, global edge caching, image optimization, and serverless compute scaling automatically with traffic spikes." 
-        }
-    ];
-    
+
+    // Animation / Visuals Layer
+    if (is3D) {
+        stack.push({
+            name: "React Three Fiber + Three.js & Drei",
+            category: "3D & Canvas Graphics",
+            purpose: "Declarative Three.js scene graph inside React component tree",
+            reason: `Essential for the requested 3D visuals. Enables declarative lighting, GLTF model loading, orbit controls, and canvas shaders without imperative boilerplate.`,
+            priority: "required",
+            source: "external",
+            alternative: "Spline Viewer",
+            alternativeWhen: "Use if you want no-code interactive 3D scene exports without writing custom Three.js shaders."
+        });
+        stack.push({
+            name: "Motion (Framer Motion)",
+            category: "UI Motion & Interactions",
+            purpose: "Spring-based physics and scroll-driven UI orchestrations",
+            reason: `Handles smooth UI overlays, stagger entrance lists, and micro-interactions layered seamlessly over the 3D canvas at 60 FPS.`,
+            priority: "recommended",
+            source: "quick-links",
+            alternative: "GSAP + ScrollTrigger",
+            alternativeWhen: "Use if complex multi-step timeline scrubbing tied to pin-scrolling is needed."
+        });
+    } else {
+        stack.push({
+            name: "Motion (Framer Motion)",
+            category: "UI Motion Engine",
+            purpose: "Declarative spring physics and scroll-linked viewport animations",
+            reason: `Provides fluid card hover states, enter/exit page transitions, and responsive layout animations without jank.`,
+            priority: "recommended",
+            source: "quick-links",
+            alternative: "CSS Transitions / Tailwind Animate",
+            alternativeWhen: "Use if zero JavaScript animation runtime is strictly required for lightweight static pages."
+        });
+    }
+
+    // Backend / API Layer
+    if (wantsPython) {
+        stack.push({
+            name: "FastAPI + Pydantic v2 (Python 3.12)",
+            category: "Backend & API Engine",
+            purpose: "High-performance asynchronous REST API with automatic OpenAPI documentation",
+            reason: `Honors your preference for Python. Delivers sub-millisecond async endpoints and native compatibility with AI/ML libraries.`,
+            priority: "required",
+            source: "external",
+            alternative: "Next.js Route Handlers",
+            alternativeWhen: "Use if consolidating into a single TypeScript full-stack repository is preferred."
+        });
+    } else {
+        stack.push({
+            name: "Next.js Route Handlers & Type-Safe Server Actions",
+            category: "Backend & API Runtime",
+            purpose: "Zero-boilerplate serverless endpoints running on Node.js / Edge",
+            reason: `Eliminates the maintenance burden of a detached backend server. Server Actions provide type-safe RPC with end-to-end TypeScript validation.`,
+            priority: "required",
+            source: "quick-links",
+            alternative: "Express.js / Hono",
+            alternativeWhen: "Use if running a standalone long-lived daemon server or microservice."
+        });
+    }
+
+    // Database & Storage Layer
+    if (wantsMongo) {
+        stack.push({
+            name: "MongoDB Atlas + Mongoose",
+            category: "Database & Storage",
+            purpose: "Document-oriented NoSQL database with dynamic schema support",
+            reason: `Honors your explicit preference for MongoDB. Fits flexible document structures and nested JSON schemas.`,
+            priority: "required",
+            source: "external",
+            alternative: "Supabase (PostgreSQL)",
+            alternativeWhen: "Use if relational constraints, ACID transactions, and Row Level Security are needed."
+        });
+    } else {
+        stack.push({
+            name: "Supabase (PostgreSQL 16) + Prisma ORM",
+            category: "Database & Data Modeling",
+            purpose: "Managed relational PostgreSQL with instant connection pooling and type-safe migrations",
+            reason: `Provides battle-tested relational integrity, automatic connection pooling via Supavisor, and Prisma-generated TypeScript client models.`,
+            priority: "required",
+            source: "quick-links",
+            alternative: "Neon Serverless Postgres + Drizzle ORM",
+            alternativeWhen: "Use if branchable serverless databases with ultra-lightweight SQL-like query builders are preferred."
+        });
+    }
+
+    // Auth Layer (only when relevant to project type or requested)
+    if (isSaaS || isEvent || descLower.includes('auth') || descLower.includes('login') || descLower.includes('user')) {
+        stack.push({
+            name: isSaaS ? "Clerk Authentication" : "Supabase Auth",
+            category: "Authentication & Identity",
+            purpose: "Secure session management, social OAuth providers, and user management",
+            reason: isSaaS
+                ? `Provides turn-key multi-tenant organization switching, pre-built security modals, and seamless webhook syncing.`
+                : `Integrated directly with PostgreSQL Row-Level Security policies, keeping data access protected at the database tier.`,
+            priority: "required",
+            source: "quick-links",
+            alternative: "Better Auth / NextAuth (Auth.js)",
+            alternativeWhen: "Use if self-hosting authentication credentials and database tables without external SaaS dependencies."
+        });
+    }
+
+    // Specialized Layer: AI / Payments / Charts
     if (isAI) {
-        stack.push({ 
-            category: "AI & Inference Engine", 
-            name: "Google Gemini 3.1 Flash / AI Studio", 
-            reason: "Sub-second token latency, massive multimodal context window, and native structured JSON schema enforcement for lightning-fast assistant and generation features." 
+        stack.push({
+            name: "Google Gemini 2.5 Flash + Vercel AI SDK",
+            category: "AI & Model Inference",
+            purpose: "Sub-second token streaming and structured JSON output generation",
+            reason: `Offers industry-leading context window capacity, multimodal document analysis, and native structured outputs at low cost.`,
+            priority: "required",
+            source: "external",
+            alternative: "OpenAI GPT-4o-mini",
+            alternativeWhen: "Use if existing OpenAI embeddings or tool-calling workflows are already standardized."
         });
     }
 
     if (isEcom || isSaaS) {
         stack.push({
-            category: "Payments & Billing",
-            name: "Stripe Elements & Checkout",
-            reason: "Industry-standard PCI-compliant checkout sessions, webhooks for automated order fulfillment, and multi-currency support."
+            name: "Stripe Billing & Checkout Elements",
+            category: "Payments & Financial Engine",
+            purpose: "PCI-compliant checkout flows, subscription lifecycles, and webhooks",
+            reason: `Required to handle checkout sessions, tax calculation, and automated subscription renewal webhooks safely.`,
+            priority: "required",
+            source: "external",
+            alternative: "Lemon Squeezy",
+            alternativeWhen: "Use if Merchant of Record (MoR) global tax handling is preferred over direct merchant processing."
         });
     }
+
+    if (isDashboard) {
+        stack.push({
+            name: "Recharts + TanStack Table",
+            category: "Data Visualization & Tables",
+            purpose: "Declarative SVG charting and headless sorting/filtering tables",
+            reason: `Provides responsive, hardware-accelerated time-series line, bar, and area charts with zero canvas memory leaks.`,
+            priority: "recommended",
+            source: "external",
+            alternative: "Tremor / Chart.js",
+            alternativeWhen: "Use if high-level opinionated dashboard cards are desired over custom composable SVGs."
+        });
+    }
+
+    // Deployment Layer
+    stack.push({
+        name: "Vercel Edge Platform",
+        category: "Deployment & Edge Infrastructure",
+        purpose: "Global edge CDN, automated preview builds, and serverless compute",
+        reason: `Zero-configuration Git deployment, automatic preview environments for every pull request, and global edge asset caching.`,
+        priority: "recommended",
+        source: "quick-links",
+        alternative: "Cloudflare Pages + Workers",
+        alternativeWhen: "Use if global edge compute at flat pricing without serverless execution time limits is paramount."
+    });
+
+    // 4. Match Curated Tools (distinguishing Quick Links vs External)
+    const matchedTools = [];
     
+    // Scan resourcesDb
+    const scoredDb = [];
+    resourcesDb.forEach(res => {
+        let score = 0;
+        const nameLower = res.name.toLowerCase();
+        const catLower = res.category.toLowerCase();
+        const descWords = (res.description + ' ' + res.useWhen + ' ' + (res.worksWith || []).join(' ')).toLowerCase();
+
+        if (descLower.includes(nameLower)) score += 20;
+        if (descLower.includes(catLower)) score += 8;
+
+        if (is3D && (res.category === '3d' || nameLower.includes('spline') || nameLower.includes('three'))) score += 15;
+        if ((res.category === 'animation' || nameLower.includes('motion')) && (descLower.includes('animat') || descLower.includes('motion') || is3D || isEcom)) score += 12;
+        if (isAI && (res.category === 'ai' || nameLower.includes('google') || nameLower.includes('open'))) score += 15;
+        if ((isSaaS || isEcom) && (nameLower.includes('clerk') || nameLower.includes('supabase') || res.category === 'auth')) score += 14;
+        if ((res.category === 'ui' || res.category === 'visuals') && (descLower.includes('ui') || descLower.includes('component') || descLower.includes('card') || isEcom || is3D || isDashboard)) score += 10;
+        if (res.category === 'database' && (descLower.includes('db') || descLower.includes('data') || isSaaS || isEvent || isEcom)) score += 12;
+
+        const queryWords = descLower.split(/\W+/).filter(w => w.length > 2);
+        queryWords.forEach(w => {
+            if (nameLower.includes(w)) score += 4;
+            if (descWords.includes(w)) score += 2;
+        });
+
+        if (score > 0) scoredDb.push({ res, score });
+    });
+
+    scoredDb.sort((a, b) => b.score - a.score);
+    const topFromDb = scoredDb.slice(0, 5);
+
+    topFromDb.forEach(item => {
+        const r = item.res;
+        matchedTools.push({
+            name: r.name,
+            category: r.category,
+            source: "quick-links",
+            reason: `Curated Quick Links resource: ${r.name} directly solves "${r.useWhen}". Integrates seamlessly with ${(r.worksWith || []).join(', ')}.`,
+            url: r.url,
+            icon: r.icon,
+            tag: r.tag,
+            tagClass: r.tagClass,
+            worksWith: r.worksWith
+        });
+    });
+
+    // Add relevant high-impact External tools when appropriate
+    if (is3D && !matchedTools.some(t => t.name.toLowerCase().includes('three'))) {
+        matchedTools.push({
+            name: "Three.js & React Three Fiber",
+            category: "3D Graphics",
+            source: "external",
+            reason: "External recommendation: Industry standard WebGL/WebGPU 3D canvas runtime for rendering interactive 3D assets inside React.",
+            url: "https://threejs.org",
+            icon: "🧊",
+            tag: "EXTERNAL",
+            worksWith: ["Next.js", "React 19", "Drei"]
+        });
+    }
+
+    if (isAI && !matchedTools.some(t => t.name.toLowerCase().includes('ai'))) {
+        matchedTools.push({
+            name: "Vercel AI SDK",
+            category: "AI Integration",
+            source: "external",
+            reason: "External recommendation: Streamlined React hooks (`useChat`, `useCompletion`) with multi-provider streaming support and tool calling.",
+            url: "https://sdk.vercel.ai",
+            icon: "🤖",
+            tag: "EXTERNAL",
+            worksWith: ["Next.js", "Gemini", "OpenAI"]
+        });
+    }
+
+    if ((isSaaS || isEcom) && !matchedTools.some(t => t.name.toLowerCase().includes('stripe'))) {
+        matchedTools.push({
+            name: "Stripe",
+            category: "Payments",
+            source: "external",
+            reason: "External recommendation: Mission-critical payment processing with PCI compliance and prebuilt hosted checkout sessions.",
+            url: "https://stripe.com",
+            icon: "💳",
+            tag: "EXTERNAL",
+            worksWith: ["Next.js", "Supabase", "Clerk"]
+        });
+    }
+
+    // 5. Coherent Workflow
     const workflow = [
-        "01 → Phase 1: Architecture & Scaffolding — Initialize Next.js 15 with TypeScript, Tailwind CSS, and strict ESLint. Configure directory structure with App Router, shadcn/ui components.json, and environment variable validation using Zod.",
-        "02 → Phase 2: Design System & Primitive Foundations — Scaffold global CSS variables for dark theme, typography tokens, layout containers, and install core components (Button, Dialog, Dropdown, Sheet, Badge, Card, Skeleton).",
-        "03 → Phase 3: Interactive Visuals & Motion Layer — Implement viewport scroll animations, fluid staggered grids with Motion, interactive floating navigation, and responsive mobile drawers.",
-        "04 → Phase 4: Database Modeling & Data Fetching — Design PostgreSQL schema in Supabase with Prisma models. Configure relations, indexes, and write type-safe Server Actions with React cache for optimistic UI updates.",
-        "05 → Phase 5: Auth & Feature Integrations — Wire up Clerk session middleware, protect private routes, integrate payment checkouts or third-party webhooks, and implement comprehensive toast notifications.",
-        "06 → Phase 6: Production Hardening & Deployment — Audit Lighthouse scores, configure Core Web Vitals monitoring, optimize image formats (WebP/AVIF), and deploy to Vercel with automated branch preview environments."
+        `01 → Phase 1: Architecture & Scaffolding — Initialize Next.js 15 with TypeScript, Tailwind CSS, and strict ESLint rules. Configure path aliases (@/*), environment schema validation with Zod, and foundational layout structure.`,
+        `02 → Phase 2: Design System & Primitives — Install shadcn/ui primitives (Button, Card, Dialog, Sheet, Badge). Establish brand CSS variables, typography tokens, and high-contrast dark theme surfaces.`,
+        `03 → Phase 3: Core Domain Implementation — Build the primary functional views for ${appType}. Construct interactive components, responsive navigation, and state models tailored to user requirements.`,
+        `04 → Phase 4: Data Layer & Integrations — Scaffold database models, write migrations, and establish type-safe Server Actions. Wire up external APIs, authentication guards, and validation pipelines.`,
+        `05 → Phase 5: Motion, Feedback & Polish — Implement Motion spring transitions, loading skeletons, empty states, and toast notifications for every user action. Audit keyboard accessibility and responsive layouts.`,
+        `06 → Phase 6: Production Hardening & Vercel Launch — Configure OpenGraph metadata, optimize assets, verify error boundaries, and deploy to Vercel with automated Git preview environments.`
     ];
-    
-    const codingPrompt = `You are an elite principal full-stack engineer and UI designer. Build a complete, production-grade web application based on this project specification:
 
-### PROJECT GOAL
+    // 6. Project-Specific Exhaustive Coding Prompt
+    const codingPrompt = `You are an elite Principal Software Architect and Senior Full-Stack Engineer. Build a production-ready application based on this exhaustive specification:
+
+### 1. PROJECT GOAL
 "${description}"
+Target Application Type: ${appType}
+Primary Users: ${targetUsers}
 
-### TARGET TECH STACK
-- Framework: Next.js 15+ (App Router, React 19, TypeScript)
-- Styling: Tailwind CSS (Dark aesthetic, clean glassmorphism, subtle borders)
-- UI Primitives: shadcn/ui (Radix UI) + Lucide Icons
-- Motion & Animation: Motion (Framer Motion) for scroll triggers and stagger effects
-- Backend & Database: Supabase PostgreSQL + Prisma ORM
-- Deployment: Vercel
+### 2. TARGET TECH STACK & DEPENDENCIES
+- Core Framework: ${stack[0]?.name || 'Next.js 15 (App Router, React 19, TypeScript)'}
+- UI & Styling: ${stack[1]?.name || 'Tailwind CSS + shadcn/ui (Radix UI)'}
+- Motion & Canvas: ${stack[2]?.name || 'Motion (Framer Motion)'}
+- Backend Runtime: ${stack[3]?.name || 'Next.js Route Handlers & Server Actions'}
+- Data & Persistence: ${stack[4]?.name || 'Supabase (PostgreSQL) + Prisma ORM'}
+- Deployment: Vercel Edge Platform
 
-### ARCHITECTURE & DIRECTORY STRUCTURE
-Scaffold following this modular layout:
+### 3. ARCHITECTURE & DIRECTORY STRUCTURE
+Scaffold following this modular architecture:
 \`\`\`text
 src/
 ├── app/
-│   ├── layout.tsx         # Root layout with dark theme provider and fonts
-│   ├── page.tsx           # Main landing / storefront page with scroll sections
-│   ├── api/               # Serverless Route Handlers
-│   └── globals.css        # Tailwind variables and ambient background glows
+│   ├── layout.tsx              # Root layout with fonts, theme provider, and analytics
+│   ├── page.tsx                # Main view / application landing page
+│   ├── api/                    # Serverless API endpoints & webhook handlers
+│   └── globals.css             # Design tokens, CSS variables, and ambient glow utilities
 ├── components/
-│   ├── ui/                # shadcn primitives (Button, Card, Badge, Dialog)
-│   ├── navigation/        # Interactive floating navbar & responsive drawer
-│   ├── sections/          # Feature sections, Hero, and interactive cards
-│   └── animations/        # Reusable Framer Motion wrappers (FadeIn, StaggerGrid)
+│   ├── ui/                     # shadcn/ui headless primitives (button, card, dialog, badge)
+│   ├── navigation/             # Responsive header, floating bar, and mobile drawer
+│   ├── modules/                # Domain-specific interactive feature components
+│   └── feedback/               # Skeletons, error boundaries, empty state cards, and toasts
 ├── lib/
-│   ├── prisma.ts          # Singleton Prisma client instance
-│   └── utils.ts           # Class merge helper (clsx + tailwind-merge)
-└── types/                 # TypeScript interfaces and schema definitions
+│   ├── db.ts                   # Database connection singleton client
+│   └── utils.ts                # Class merging helper (clsx + tailwind-merge)
+├── types/                      # End-to-end TypeScript interfaces and API schemas
+└── hooks/                      # Custom React state and interaction hooks
 \`\`\`
 
-### IMPLEMENTATION REQUIREMENTS
-1. Visual Polish: Use a premium dark technical aesthetic (#08090d background, #10121a cards, 1px subtle borders #222634, and soft indigo/purple accents).
-2. Card & Scroll Effects: Implement interactive cards with hover scale/tilt, spring physics, dynamic image reveal on hover, and smooth scroll entrance reveals.
-3. Accessibility & Performance: Strict semantic HTML, full keyboard navigation, aria labels, and next/image optimization.
-4. Provide the complete code for the layout, the primary feature component, and the interactive cards. Do not use placeholders.`;
+### 4. CORE FEATURES & USER FLOWS
+1. First Impressions & Hero: Clean, high-impact introductory viewport communicating value with polished micro-interactions.
+2. Primary Interactive Experience: Fully responsive core interaction workflow solving "${description.slice(0, 80)}...".
+3. Responsive & Accessible Navigation: Mobile-first layout supporting keyboard navigation, focus indicators, and smooth drawer transitions.
+4. Robust Data Handling: Optimistic UI updates, input validation with descriptive errors, and resilient loading skeletons.
+
+### 5. UI/UX & STYLING SPECIFICATIONS
+- Visual Palette: Deep dark aesthetic (#050507 background, #101116 cards, 1px subtle borders #24242D).
+- Brand Highlights: Yellow accent (#FFC400) for active states, key CTAs, and badges; subtle secondary accents (Purple #7C5CFF, Blue #4F8CFF).
+- Micro-interactions: Spring physics via Motion for card hover lift, subtle glow on interactive elements, and staggered list entrances.
+
+### 6. PRODUCTION IMPLEMENTATION RULES
+1. Provide the complete code for the layout, the primary feature component, and interactive elements.
+2. Strictly NO placeholders, NO 'TODO' comments, and NO truncated implementations for critical logic.
+3. Enforce strict TypeScript typing across all props, state variables, and Server Action payloads.
+4. Ensure full keyboard accessibility (aria-labels, focus-visible rings) and mobile touch optimization.`;
 
     return {
-        summary: `Comprehensive architectural blueprint engineered for: "${description}". Configured with a modern Next.js 15 App Router architecture, shadcn/ui design system, Motion animation layer, and verified developer tools matched from your toolbox.`,
+        summary: `Tailored architectural blueprint engineered for: "${description}". Designed as a high-performance ${appType} utilizing ${stack[0]?.name || 'Next.js 15'}, ${stack[1]?.name || 'shadcn/ui'}, and verified developer tools.`,
         mode: mode,
         provider: "heuristic",
         isFallback: true,
+        understanding: {
+            goal: description,
+            applicationType: appType,
+            targetUsers: targetUsers,
+            requirements: [
+                "Responsive modern UI with dark-theme developer aesthetic",
+                "Modular architecture separating presentation, business logic, and data layer",
+                "Hardware-accelerated micro-interactions and smooth viewport transitions",
+                "Production-grade error handling and loading feedback"
+            ],
+            constraints: [
+                "Must maintain 60 FPS interaction performance",
+                "Zero unnecessary runtime dependencies",
+                "Full mobile and keyboard accessibility"
+            ],
+            assumptions: [
+                "Targeting modern Evergreen browsers with JavaScript enabled",
+                "Deploying to serverless edge infrastructure (e.g. Vercel)"
+            ]
+        },
         recommendedStack: stack,
-        matchedTools: topMatches,
+        matchedTools: matchedTools,
         workflow: workflow,
-        architecture: `A high-performance modern Serverless architecture utilizing Next.js 15 App Router for hybrid SSR/Edge delivery, Supabase PostgreSQL for persistent state and real-time syncing, and client-side Motion springs for 60 FPS scroll-triggered micro-interactions.`,
+        architecture: `A high-performance modern serverless architecture utilizing ${stack[0]?.name} for hybrid SSR/Edge rendering, ${stack[4]?.name || 'Supabase PostgreSQL'} for persistent state management, and declarative client-side springs for 60 FPS micro-interactions.`,
         codingPrompt: codingPrompt,
         nextSteps: [
-            "Initialize your Next.js application: `npx create-next-app@latest my-app --typescript --tailwind --app`",
-            "Initialize your shadcn/ui component library: `npx shadcn@latest init`",
-            "Install animation and icon packages: `npm install motion lucide-react clsx tailwind-merge`",
-            "Set up your Supabase project credentials in `.env.local`",
-            "Paste the generated AI Coding Prompt into Cursor or Claude to scaffold the core components"
+            "Initialize application repository with TypeScript, Tailwind CSS, and strict linting",
+            "Configure design system primitives and dark-theme variables in globals.css",
+            "Scaffold core application layout, navigation drawer, and feature containers",
+            "Set up database schema and environment variables in .env.local",
+            "Paste the generated AI Coding Prompt into Cursor or Claude to scaffold complete components"
         ],
-        isFallbackNotice: "Notice: Operating in heuristic toolbox matching mode. Add GEMINI_API_KEY to your hosting environment variables to enable full Google Gemini Flash generative intelligence."
+        optionalEnhancements: [
+            "Add progressive web app (PWA) offline caching manifest",
+            "Implement OpenGraph social preview dynamic image generation",
+            "Add real-time analytics telemetry and error tracking via Sentry"
+        ],
+        isFallbackNotice: "Notice: Operating in offline toolbox matching mode. Add GEMINI_API_KEY to your environment variables to enable full Google Gemini generative intelligence."
+    };
+}
+
+/**
+ * Filter and format candidate resources compactly for Gemini prompt context
+ */
+function buildCuratedCatalogueContext(description) {
+    const descLower = description.toLowerCase();
+    
+    // Score all resources
+    const scored = resourcesDb.map(r => {
+        let score = 0;
+        const nameLower = r.name.toLowerCase();
+        const catLower = r.category.toLowerCase();
+        const fullText = (r.description + ' ' + r.useWhen + ' ' + (r.worksWith || []).join(' ')).toLowerCase();
+        
+        if (descLower.includes(nameLower)) score += 15;
+        if (descLower.includes(catLower)) score += 8;
+        
+        const words = descLower.split(/\W+/).filter(w => w.length > 2);
+        words.forEach(w => {
+            if (nameLower.includes(w)) score += 4;
+            if (fullText.includes(w)) score += 2;
+        });
+        
+        return { resource: r, score };
+    });
+    
+    scored.sort((a, b) => b.score - a.score);
+    
+    // Top 20 resources get full context
+    const topCandidates = scored.slice(0, 22).map(s => s.resource);
+    const candidateList = topCandidates.map(r => 
+        `- [${r.name}] (Category: ${r.category}, Tag: ${r.tag}): ${r.description} | Works With: ${(r.worksWith || []).join(', ')} | Use When: ${r.useWhen} | URL: ${r.url}`
+    ).join('\n');
+    
+    // Compact index of remaining resources
+    const remaining = scored.slice(22).map(s => `${s.resource.name} (${s.resource.category})`).join(', ');
+    
+    return {
+        detailedContext: candidateList,
+        compactSummary: remaining
     };
 }
 
@@ -277,21 +584,21 @@ async function handler(req, res) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    const configuredModel = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
+    const configuredModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
-    // Candidate models in preference order
+    // Candidate models in preference order (reliable public Gemini endpoints)
     const candidateModels = [
         configuredModel,
-        "gemini-3.1-flash-lite",
-        "gemini-3.5-flash-lite",
-        "gemini-flash-latest",
-        "gemini-3.8-flash"
+        "gemini-2.5-flash",
+        "gemini-1.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-pro"
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
     // Logging for debugging (ONLY boolean for key, NEVER log actual key value)
-    console.log(`[Assistant API] Request received for description: "${description.slice(0, 45)}..."`);
+    console.log(`[Assistant API] Request received for: "${description.slice(0, 45)}..."`);
     console.log(`[Assistant API] Gemini configured: ${Boolean(apiKey)}`);
-    console.log(`[Assistant API] Gemini model: ${configuredModel}`);
+    console.log(`[Assistant API] Gemini preferred model: ${configuredModel}`);
 
     // If API key is missing
     if (!apiKey) {
@@ -314,57 +621,99 @@ async function handler(req, res) {
         return;
     }
 
-    // Format catalogue for Gemini context
-    const toolboxCatalogue = resourcesDb.map(r => 
-        `- [${r.name}] (Category: ${r.category}, Tag: ${r.tag}): ${r.description} | Works With: ${r.worksWith.join(', ')} | Use When: ${r.useWhen} | URL: ${r.url}`
-    ).join('\n');
+    // Build curated context
+    const { detailedContext, compactSummary } = buildCuratedCatalogueContext(description);
 
-    const systemPrompt = `You are a Principal Software Architect and Tech Lead acting as the "AI Build Assistant" for a developer's Quick Links tech radar and toolbox.
+    const systemPrompt = `You are an elite Senior Software Architect, Full-Stack Lead Engineer, and Developer Tooling Advisor acting as the "AI Build Assistant" for Quick Links (a curated developer toolbox).
 
-The developer is providing a project concept, feature requirement, or architectural question.
-Your mission is to provide an EXTREMELY DETAILED, HIGH-YIELD, UN-GENERIC architectural specification and plan.
+Your mission is to transform the user's project idea into a complete, coherent, practical technical blueprint, tech stack recommendation, tool selection, implementation roadmap, and an exhaustive coding prompt.
 
---- DEVELOPER TOOLBOX CATALOGUE (61 VERIFIED TOOLS) ---
-${toolboxCatalogue}
---- END TOOLBOX ---
+--- RELEVANT CANDIDATES FROM QUICK LINKS TOOLBOX ---
+${detailedContext}
+Additional Quick Links toolbox tools available: ${compactSummary}
+--- END QUICK LINKS TOOLBOX ---
 
-MANDATORY RULES & QUALITY STANDARDS:
-1. NO GENERIC FLUFF: Avoid superficial one-liners. Provide actionable technical depth, naming exact libraries, patterns, and trade-offs.
-2. TOOL MATCHING WITH DEEP REASONS:
-   - For every tool you recommend from their toolbox, you MUST explain in depth (2-3 detailed sentences) EXACTLY WHY you selected it for THIS project, which specific feature/screen it solves, and how it connects to the other stack layers.
-   - Use the EXACT canonical tool names and URLs from the toolbox.
-3. EXPANDED RECOMMENDED STACK:
-   - Recommend 6 to 8 cohesive stack layers (Frontend, UI/Design System, Animation Engine, Backend/Server, Database/ORM, Auth, Deployment, APIs).
-   - For each stack item, give a detailed technical rationale explaining why it wins over alternatives.
-4. EXPANDED WORKFLOW (PHASES & MILESTONES):
-   - Provide 6 structured phases formatted with clear milestone names:
-     "01 → Phase 1: Architecture & Scaffolding — [detailed explanation of tasks, CLI commands, and structure]"
-     "02 → Phase 2: Design System & UI Primitives — [detailed explanation]"
-     "03 → Phase 3: Core Features & Interactive Motion — [detailed explanation]"
-     "04 → Phase 4: Data Layer, Schemas & API Integrations — [detailed explanation]"
-     "05 → Phase 5: Authentication, Security & Polish — [detailed explanation]"
-     "06 → Phase 6: QA, Optimization & Vercel Deployment — [detailed explanation]"
-5. FULL-LENGTH, EXHAUSTIVE CODING PROMPT:
-   - The "codingPrompt" MUST BE A COMPREHENSIVE, LONG SPECIFICATION (at least 350-500 words).
-   - It must include: Role, Goal, Target Tech Stack with versions, Directory File Tree structure, Key Components Breakdown, State & Data Flow requirements, and Production Implementation Rules.
-   - The user should be able to paste this directly into Cursor / Claude 3.7 / ChatGPT to build the entire app.
-6. OUTPUT FORMAT:
-   Return ONLY a single valid JSON object with NO markdown formatting, strictly following this JSON schema:
+CORE ARCHITECTURAL RULES & REASONING PRINCIPLES:
+
+1. UNDERSTAND INTENT & REQUIREMENTS FIRST:
+   - Understand the user's actual goal, application type, and target audience.
+   - Infer necessary UI/UX, data persistence, authentication, APIs, and performance requirements from what they want to build.
+   - Do NOT invent unrequested major features (e.g. do not add Stripe payments, admin dashboards, or complex subscriptions unless requested or strictly necessary for the application).
+   - If user request has ambiguities that do not prevent planning, make pragmatic engineering assumptions and record them in "understanding.assumptions".
+
+2. RESPECT EXPLICIT USER PREFERENCES:
+   - If the user explicitly requests a specific framework, language, or tool (e.g. "I want Python", "use MongoDB", "Vue", "Supabase"), RESPECT that preference unless technically contradictory. If recommending an alternative, clearly explain why.
+
+3. STACK COHERENCE & SINGLE PRIMARY DECISION:
+   - Recommend 6 to 8 cohesive stack layers (e.g., Frontend Framework, UI & Design System, Animation/Interaction, Backend/Server Runtime, Database & Storage, Authentication, Deployment, Specialized Services).
+   - For every stack layer, make ONE clear primary recommendation to eliminate decision paralysis.
+   - Avoid over-engineering: choose the smallest coherent stack that satisfies the requirements.
+   - Explicitly label priority: "required" | "recommended" | "optional" | "alternative".
+   - Optionally suggest a viable alternative with a clear "when to use" condition.
+   - Ensure all layers work harmoniously together (e.g. do not combine conflicting database paradigms unless genuinely required).
+
+4. TWO SOURCES OF RECOMMENDATIONS (QUICK LINKS + EXTERNAL):
+   - Quick Links is NOT a closed ecosystem. You are explicitly encouraged to recommend external/out-of-the-box tools, libraries, models, and services when they are better suited for the project.
+   - For each tool, clearly indicate source: "quick-links" OR "external".
+   - When recommending a Quick Links resource, use its exact canonical name and URL from the provided toolbox context. Never hallucinate fake Quick Links items.
+   - When recommending an external technology, explain why it was chosen over alternatives. Never pretend external tools belong to Quick Links.
+   - Select 4 to 8 highly relevant tools in "matchedTools". For each tool, provide a concrete explanation of which specific screen/feature it implements and why it fits.
+
+5. ARCHITECTURE & WORKFLOW COHERENCE:
+   - Stack, Architecture, Workflow, and Coding Prompt MUST be 100% aligned.
+   - Architecture: Provide an in-depth explanation of the system architecture, rendering model (SSR/SSG/Client/Edge), state flow, API communication, and scaling model.
+   - Workflow: Provide 6 sequential phases formatted as:
+     "01 → Phase 1: Name — [concrete tasks, CLI commands, files]"
+     Explaining: what to build first → next → connect → test → deploy.
+   - Next Steps: 4 to 5 immediate, actionable, sequential developer steps.
+
+6. FULL-LENGTH, EXHAUSTIVE CODING PROMPT (350-550 words):
+   - The "codingPrompt" must be a complete, copy-paste-ready specification for Cursor / Claude Code / ChatGPT / AI coding agents.
+   - It MUST include:
+     ### ROLE & PROJECT GOAL
+     ### TARGET TECH STACK & DEPENDENCIES
+     ### ARCHITECTURE & DIRECTORY STRUCTURE (ASCII tree)
+     ### CORE FEATURES & USER FLOWS
+     ### UI/UX & STYLING SPECIFICATIONS (Tokens, dark aesthetic, component states)
+     ### FUNCTIONAL REQUIREMENTS & DATA MODELS
+     ### API ROUTES & INTEGRATION CONTRACTS
+     ### ERROR HANDLING & LOADING FEEDBACK
+     ### PRODUCTION IMPLEMENTATION RULES (Strict TypeScript, zero placeholders, accessibility)
+
+7. OUTPUT JSON SCHEMA:
+Return ONLY a single valid JSON object strictly matching this schema:
 {
-  "summary": "Deep 2-3 sentence technical summary of the project and architectural approach",
+  "summary": "Concise 2-3 sentence technical overview of the architecture and approach",
   "mode": "${mode}",
-  "architecture": "In-depth 3-4 sentence explanation of the system architecture, data flow, rendering strategy, and scaling model",
+  "understanding": {
+    "goal": "Clear summary of user's core product goal",
+    "applicationType": "Precise application archetype",
+    "targetUsers": "Intended target user group",
+    "requirements": ["Requirement 1", "Requirement 2", "..."],
+    "constraints": ["Constraint 1", "..."],
+    "assumptions": ["Assumption 1", "..."]
+  },
   "recommendedStack": [
-    { "category": "Frontend Framework", "name": "...", "reason": "Detailed architectural rationale..." },
-    { "category": "UI & Design System", "name": "...", "reason": "Detailed architectural rationale..." },
-    { "category": "Animation Engine", "name": "...", "reason": "Detailed architectural rationale..." },
-    { "category": "Backend & Server", "name": "...", "reason": "Detailed architectural rationale..." },
-    { "category": "Database & ORM", "name": "...", "reason": "Detailed architectural rationale..." },
-    { "category": "Authentication", "name": "...", "reason": "Detailed architectural rationale..." },
-    { "category": "Deployment", "name": "...", "reason": "Detailed architectural rationale..." }
+    {
+      "name": "Exact Technology Name",
+      "category": "Frontend Framework | UI & Design System | Animation Engine | Backend & API | Database & Storage | Authentication | Deployment | ...",
+      "purpose": "Precise role in system",
+      "reason": "Detailed technical rationale for why this wins for this project",
+      "priority": "required|recommended|optional|alternative",
+      "source": "quick-links|external",
+      "alternative": "Optional alternative tool name",
+      "alternativeWhen": "Condition when to prefer alternative"
+    }
   ],
+  "architecture": "In-depth 3-4 sentence explanation of the data flow, rendering strategy, and component communication",
   "matchedTools": [
-    { "name": "...", "category": "...", "reason": "Deep, specific rationale for why this tool is selected for this project...", "url": "..." }
+    {
+      "name": "Tool Name",
+      "category": "Category",
+      "source": "quick-links|external",
+      "reason": "Deep, specific rationale explaining which feature/screen this tool solves and why it fits",
+      "url": "https://..."
+    }
   ],
   "workflow": [
     "01 → Phase 1: ...",
@@ -380,13 +729,17 @@ MANDATORY RULES & QUALITY STANDARDS:
     "Step 2...",
     "Step 3...",
     "Step 4..."
+  ],
+  "optionalEnhancements": [
+    "Optional feature 1",
+    "Optional feature 2"
   ]
 }`;
 
     const userPrompt = `Project Description to Architect:
 "${description}"
 
-Please analyze this requirement, select the optimal stack, match against my Quick Links toolbox with deep project-specific reasons for each tool, expand the workflow phases, and generate an exhaustive, high-length AI coding prompt.`;
+Please analyze this requirement, extract goals and constraints, select an optimal coherent stack distinguishing required vs recommended and Quick Links vs external tools, match relevant tools with deep project-specific reasons, define the architecture and workflow, and generate an exhaustive, production-grade AI coding prompt.`;
 
     const requestPayload = {
         contents: [
@@ -400,7 +753,7 @@ Please analyze this requirement, select the optimal stack, match against my Quic
         },
         generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.3
+            temperature: 0.25
         }
     };
 
@@ -494,7 +847,7 @@ Please analyze this requirement, select the optimal stack, match against my Quic
                 return;
             }
 
-            // Post-process matchedTools to ensure canonical URLs and metadata from resourcesDb
+            // Post-process matchedTools: enrich Quick Links canonical metadata while preserving external tools
             if (Array.isArray(parsed.matchedTools)) {
                 parsed.matchedTools = parsed.matchedTools.map(item => {
                     const canonical = resourcesDb.find(r => 
@@ -508,6 +861,7 @@ Please analyze this requirement, select the optimal stack, match against my Quic
                         return {
                             name: canonical.name,
                             category: canonical.category,
+                            source: "quick-links",
                             reason: item.reason || `Essential for this architecture: ${canonical.useWhen}`,
                             url: canonical.url,
                             icon: canonical.icon,
@@ -517,7 +871,32 @@ Please analyze this requirement, select the optimal stack, match against my Quic
                         };
                     }
 
-                    return item;
+                    // External tool recommendation
+                    return {
+                        name: item.name,
+                        category: item.category || "Tool",
+                        source: "external",
+                        reason: item.reason || "Recommended external tool for this architecture.",
+                        url: item.url || "#",
+                        icon: item.icon || "🌐",
+                        tag: "EXTERNAL",
+                        worksWith: item.worksWith || []
+                    };
+                });
+            }
+
+            // Ensure recommendedStack items have source and priority normalized
+            if (Array.isArray(parsed.recommendedStack)) {
+                parsed.recommendedStack = parsed.recommendedStack.map(item => {
+                    const hasInDb = resourcesDb.some(r => 
+                        r.name.toLowerCase().includes((item.name || '').toLowerCase()) ||
+                        (item.name || '').toLowerCase().includes(r.name.toLowerCase())
+                    );
+                    return {
+                        ...item,
+                        source: item.source || (hasInDb ? "quick-links" : "external"),
+                        priority: item.priority || "recommended"
+                    };
                 });
             }
 
