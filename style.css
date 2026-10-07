@@ -207,17 +207,23 @@ body::before {
     max-width: 1440px;
     margin: auto;
     position: relative;
-    padding: 0 4%;
+    padding: 0 4% 40px;
 }
 
 .main-content {
     width: 100%;
-    transition: padding-right 0.3s ease;
 }
 
 @media (min-width: 1240px) {
+    .layout-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 36px;
+    }
+
     .main-content {
-        padding-right: 330px;
+        flex: 1;
+        min-width: 0;
     }
 }
 
@@ -380,14 +386,15 @@ body::before {
 }
 
 
-/* ================= STACK RADAR (FIXED RIGHT PANEL ON DESKTOP) ================= */
+/* ================= STACK RADAR (STICKY RIGHT PANEL ON DESKTOP) ================= */
 
 .stack-radar-panel {
-    position: fixed;
+    position: sticky;
     top: 92px;
-    right: 24px;
     width: 310px;
-    max-height: calc(100vh - 175px);
+    flex-shrink: 0;
+    max-height: calc(100vh - 120px);
+    margin-bottom: 48px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: 85;
@@ -409,8 +416,7 @@ body::before {
 
     transition:
         transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.3s ease,
-        right 0.35s ease;
+        opacity 0.3s ease;
     animation: radarEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1033,22 +1039,15 @@ body::before {
 .footer-inner {
     position: relative;
     z-index: 1;
-    max-width: 1440px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 4%;
-    transition: padding-right 0.3s ease;
-}
-
-/* Clear desktop fixed Stack Radar panel */
-@media (min-width: 1240px) {
-    .footer-inner {
-        padding-right: 360px;
-    }
 }
 
 .footer-story-section {
-    max-width: 860px;
-    margin-bottom: 48px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto 52px;
 }
 
 /* Teaser / Hook Card (Darker Layered Contrast against #15161A footer) */
@@ -1418,15 +1417,20 @@ body::before {
 
 /* Footer Divider */
 .footer-divider {
+    width: 100%;
+    max-width: 1100px;
     height: 1px;
     background: rgba(255, 255, 255, 0.10);
-    margin: 40px 0 32px;
+    margin: 40px auto 32px;
 }
 
 /* Footer Bottom Bar (Two-sided: Left brand, Right links) */
 .footer-bottom-bar {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 24px;
 }
@@ -1469,12 +1473,14 @@ body::before {
     color: #777A84;
 }
 
-/* Right-Side Links Group (Exact order: Repository then Built by Sai) */
+/* Right-Side Links Group (Vertical, Right-Aligned, Exact Order) */
 .footer-links-group {
     display: flex;
-    align-items: center;
-    gap: 26px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
     font-size: 13px;
+    text-align: right;
     white-space: nowrap;
 }
 
@@ -1489,7 +1495,7 @@ body::before {
 
 .footer-repo-link:hover {
     color: #FFC400;
-    transform: translateY(-1px);
+    transform: translateX(2px);
     text-shadow: 0 0 10px rgba(255, 196, 0, 0.25);
 }
 
@@ -1498,6 +1504,7 @@ body::before {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    text-align: right;
 }
 
 .footer-author-link {
@@ -1505,7 +1512,7 @@ body::before {
     font-weight: 600;
     text-decoration: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .footer-author-link:hover {
@@ -1552,14 +1559,18 @@ body::before {
     .footer-bottom-bar {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: 20px;
     }
 
     .footer-links-group {
-        flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
+        text-align: left;
+        gap: 8px;
         white-space: normal;
+    }
+
+    .footer-author-wrap {
+        text-align: left;
     }
 }
 
@@ -1597,17 +1608,20 @@ body::before {
     }
 
     .stack-radar-panel {
+        position: fixed;
         top: 0;
         right: -360px;
         bottom: 0;
         width: 320px;
         max-height: 100vh;
+        margin-bottom: 0;
         border-radius: 0;
         border-right: none;
         border-top: none;
         border-bottom: none;
         z-index: 999;
         box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7);
+        transition: right 0.35s ease, transform 0.3s ease, opacity 0.3s ease;
     }
 
     .stack-radar-panel.mobile-open {
