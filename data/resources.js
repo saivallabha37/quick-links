@@ -8,6 +8,8 @@
    Universal module: browser global + Node.js module export
 ===================================================== */
 
+(function () {
+
 const resources = [
 
     /* =================================================
@@ -1666,3 +1668,5 @@ if (typeof window !== 'undefined') {
     window.coreStack = coreStack;
     window.categories = categories;
 }
+
+})();
