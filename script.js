@@ -5,6 +5,8 @@
    Uses data/resources.js as single source of truth
 ===================================================== */
 
+(function () {
+
 // Data is loaded from data/resources.js
 const resources = window.resources || [];
 const workflows = window.workflows || [];
@@ -524,3 +526,5 @@ renderResources();
 renderCoreStack();
 
 setupRadarInteractions();
+
+})();

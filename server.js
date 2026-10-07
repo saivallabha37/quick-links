@@ -57,7 +57,7 @@ const server = http.createServer(async (req, res) => {
     const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = urlObj.pathname;
 
-    if (pathname === '/api/assistant') {
+    if (pathname === '/api/assistant' || pathname === '/api/assistant.js') {
         try {
             await handler(req, res);
         } catch (err) {
@@ -70,12 +70,19 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Static file serving
+    // Redirect /assistant to /assistant/ so relative links resolve correctly
+    if (pathname === '/assistant') {
+        res.writeHead(301, { Location: '/assistant/' });
+        res.end();
+        return;
+    }
+
     let filePath = path.join(__dirname, pathname);
 
     // If root or directory, serve index.html
     if (pathname === '/' || pathname === '') {
         filePath = path.join(__dirname, 'index.html');
-    } else if (pathname === '/assistant' || pathname === '/assistant/') {
+    } else if (pathname === '/assistant/') {
         filePath = path.join(__dirname, 'assistant', 'index.html');
     }
 

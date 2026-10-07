@@ -1,8 +1,19 @@
 {
-  "version": 2,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": null,
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/assistant",
+      "destination": "/assistant/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
-    { "source": "/api/assistant", "destination": "/api/assistant.js" }
+    {
+      "source": "/api/assistant",
+      "destination": "/api/assistant.js"
+    }
   ]
 }
-
