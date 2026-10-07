@@ -1013,6 +1013,32 @@ body::before {
     font-size: 14px;
     cursor: pointer;
     padding: 4px;
+    align-self: flex-start;
+}
+
+.error-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.error-action-btn {
+    align-self: flex-start;
+    padding: 5px 12px;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fef2f2;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.error-action-btn:hover {
+    background: rgba(239, 68, 68, 0.35);
+    border-color: #ef4444;
 }
 
 .fallback-callout {

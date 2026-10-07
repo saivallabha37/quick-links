@@ -30,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorState = document.getElementById('errorState');
     const errorMsgText = document.getElementById('errorMsgText');
     const dismissErrorBtn = document.getElementById('dismissErrorBtn');
+    const tryFallbackBtn = document.getElementById('tryFallbackBtn');
+    const modelIndicator = document.getElementById('modelIndicator');
 
     // Results Container
     const resultsContainer = document.getElementById('resultsContainer');
@@ -106,8 +108,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dismiss Error
     dismissErrorBtn.addEventListener('click', hideError);
 
-    function showError(msg) {
+    if (tryFallbackBtn) {
+        tryFallbackBtn.addEventListener('click', () => {
+            hideError();
+            triggerGenerate({ forceFallback: true });
+        });
+    }
+
+    function showError(msg, showFallback = false) {
         errorMsgText.textContent = msg || 'Something went wrong. Please try again.';
+        if (tryFallbackBtn) {
+            tryFallbackBtn.classList.toggle('hidden', !showFallback);
+        }
         errorState.classList.remove('hidden');
     }
 
@@ -193,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Trigger API Generation
-    async function triggerGenerate() {
+    async function triggerGenerate(options = {}) {
         if (isSubmitting) return;
 
         const description = promptInput.value.trim();
@@ -202,6 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
             promptInput.focus();
             return;
         }
+
+        const forceFallback = Boolean(options && options.forceFallback);
 
         startLoading();
 
@@ -213,40 +227,181 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     description: description,
-                    mode: activeTabId
+                    mode: activeTabId,
+                    fallback: forceFallback
                 })
             });
 
-            if (!response.ok) {
-                let errText = "Something went wrong. Please try again.";
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
                 try {
-                    const errJson = await response.json();
-                    if (errJson && errJson.error) errText = errJson.error;
-                } catch (e) {}
-
-                if (response.status === 429) {
-                    showError("Too many requests. Please wait a moment.");
-                } else {
-                    showError(errText);
+                    data = await response.json();
+                } catch (e) {
+                    data = null;
                 }
+            }
+
+            if (!response.ok) {
                 stopLoading();
+                let errText = "Something went wrong. Please try again.";
+                let allowFallback = true;
+
+                if (data && data.error) {
+                    errText = data.error;
+                    allowFallback = Boolean(data.fallbackAvailable);
+                } else if (response.status === 405 || response.status === 404) {
+                    errText = `HTTP ${response.status}: The serverless API (/api/assistant) is not active on this static host (e.g. GitHub Pages). To enable live Gemini AI generation, deploy to Vercel with your GEMINI_API_KEY.`;
+                    allowFallback = true;
+                } else if (response.status === 429) {
+                    errText = "Too many requests. Please wait a moment.";
+                    allowFallback = false;
+                } else {
+                    errText = `Server error (${response.status}). Please check server logs.`;
+                    allowFallback = true;
+                }
+
+                showError(errText, allowFallback);
                 return;
             }
 
-            const data = await response.json();
+            if (!data) {
+                stopLoading();
+                showError("Invalid response format received from server.", true);
+                return;
+            }
+
             stopLoading();
             renderResults(data);
 
         } catch (err) {
             console.error('Request failed:', err);
             stopLoading();
-            showError("Network connection error. Please ensure the local server is running.");
+
+            if (forceFallback && window.resources && Array.isArray(window.resources)) {
+                // If forceFallback was requested and serverless API cannot be contacted (e.g. static host)
+                const localData = generateClientFallback(description, activeTabId);
+                renderResults(localData);
+                return;
+            }
+
+            showError("Network connection error. If running locally, ensure 'npm run dev' is running. If hosted statically on GitHub Pages, deploy to Vercel with your GEMINI_API_KEY.", true);
         }
+    }
+
+    // Client-side heuristic fallback for offline or static hosting scenarios
+    function generateClientFallback(description, mode) {
+        const descLower = description.toLowerCase();
+        const resourcesList = window.resources || [];
+        
+        const matched = [];
+        resourcesList.forEach(res => {
+            let score = 0;
+            const nameLower = res.name.toLowerCase();
+            const catLower = res.category.toLowerCase();
+            const descWords = (res.description + ' ' + res.useWhen + ' ' + (res.worksWith || []).join(' ')).toLowerCase();
+            
+            if (descLower.includes(nameLower)) score += 15;
+            if (descLower.includes(catLower)) score += 8;
+            if ((descLower.includes('3d') || descLower.includes('three')) && (res.category === '3d' || nameLower.includes('three') || nameLower.includes('spline'))) score += 12;
+            if ((descLower.includes('animat') || descLower.includes('motion') || descLower.includes('scroll')) && (res.category === 'animation' || nameLower.includes('motion') || nameLower.includes('gsap'))) score += 12;
+            if ((descLower.includes('auth') || descLower.includes('login') || descLower.includes('user')) && (res.category === 'auth' || nameLower.includes('clerk') || nameLower.includes('better auth'))) score += 12;
+            if ((descLower.includes('db') || descLower.includes('database') || descLower.includes('store') || descLower.includes('sql') || descLower.includes('product') || descLower.includes('cart')) && (res.category === 'database' || nameLower.includes('supabase') || nameLower.includes('mongo') || nameLower.includes('prisma'))) score += 12;
+            if ((descLower.includes('ai') || descLower.includes('bot') || descLower.includes('chat') || descLower.includes('llm') || descLower.includes('prompt')) && (res.category === 'ai' || nameLower.includes('openai') || nameLower.includes('google ai') || nameLower.includes('hugging'))) score += 12;
+            if ((descLower.includes('ui') || descLower.includes('component') || descLower.includes('navbar') || descLower.includes('card') || descLower.includes('shop') || descLower.includes('landing') || descLower.includes('hero')) && (res.category === 'ui' || res.category === 'visuals')) score += 10;
+            if ((descLower.includes('deploy') || descLower.includes('host') || descLower.includes('prod')) && res.category === 'deployment') score += 8;
+            if (descLower.includes('icon') && res.category === 'icons') score += 8;
+
+            const queryWords = descLower.split(/\W+/).filter(w => w.length > 2);
+            queryWords.forEach(word => {
+                if (nameLower.includes(word)) score += 4;
+                if (descWords.includes(word)) score += 2;
+            });
+
+            if (score > 0) matched.push({ resource: res, score });
+        });
+
+        matched.sort((a, b) => b.score - a.score);
+        const topMatches = matched.slice(0, 8).map(m => {
+            const r = m.resource;
+            return {
+                name: r.name,
+                category: r.category,
+                reason: `Specifically selected because ${r.name} provides ${r.description.toLowerCase()}. Perfect for your project's requirement: "${r.useWhen}". Integrates seamlessly with ${(r.worksWith || []).join(', ')}.`,
+                url: r.url,
+                icon: r.icon,
+                tag: r.tag,
+                tagClass: r.tagClass,
+                worksWith: r.worksWith
+            };
+        });
+
+        const is3D = descLower.includes('3d') || descLower.includes('canvas') || descLower.includes('game');
+        const isAI = descLower.includes('ai') || descLower.includes('llm') || descLower.includes('chat') || descLower.includes('gpt');
+        const isEcom = descLower.includes('shop') || descLower.includes('e-commerce') || descLower.includes('ecommerce') || descLower.includes('cart') || descLower.includes('product');
+        const isSaaS = descLower.includes('saas') || descLower.includes('payment') || descLower.includes('billing') || descLower.includes('subscription');
+
+        const stack = [
+            { category: "Frontend Framework", name: "Next.js 15 (App Router & Server Components)", reason: "Blazing fast hybrid rendering (SSR/SSG), nested layouts, and automatic route prefetching." },
+            { category: "UI & Design System", name: "shadcn/ui + Tailwind CSS", reason: "Accessible Radix UI primitives with complete source code ownership and zero runtime CSS overhead." },
+            { category: "Animation & Motion Engine", name: is3D ? "Spline + Motion (Framer Motion)" : "Motion (Framer Motion)", reason: "Declarative spring physics and scroll-linked animations (useScroll, useTransform) delivering 60 FPS interactions." },
+            { category: "Backend & Server Runtime", name: "Next.js Route Handlers & Server Actions", reason: "Type-safe RPC execution via Server Actions eliminating REST boilerplate." },
+            { category: "Database & ORM", name: "Supabase (PostgreSQL) + Prisma ORM", reason: "Managed PostgreSQL with instant connection pooling and end-to-end TypeScript schema safety." },
+            { category: "Authentication & Identity", name: isSaaS || isEcom ? "Clerk Authentication" : "Supabase Auth", reason: "Frictionless multi-tenant identity with social OAuth and prebuilt secure modals." },
+            { category: "Deployment & Edge Infrastructure", name: "Vercel Edge Platform", reason: "Zero-config Git deployments with automatic preview environments and global edge caching." }
+        ];
+
+        if (isAI) {
+            stack.push({ category: "AI & Inference Engine", name: "Google Gemini 3.1 Flash / AI Studio", reason: "Sub-second token latency, massive multimodal context window, and native JSON schema output." });
+        }
+        if (isEcom || isSaaS) {
+            stack.push({ category: "Payments & Billing", name: "Stripe Elements & Checkout", reason: "Industry-standard PCI-compliant checkout sessions and automated webhooks." });
+        }
+
+        const workflow = [
+            "01 → Phase 1: Architecture & Scaffolding — Initialize Next.js 15 with TypeScript, Tailwind CSS, and strict ESLint. Configure directory structure with App Router, shadcn/ui components.json, and environment variable validation.",
+            "02 → Phase 2: Design System & Primitive Foundations — Scaffold global CSS variables for dark theme, typography tokens, layout containers, and install core components (Button, Dialog, Sheet, Badge, Card).",
+            "03 → Phase 3: Interactive Visuals & Motion Layer — Implement viewport scroll animations, fluid staggered grids with Motion, interactive floating navigation, and responsive drawers.",
+            "04 → Phase 4: Database Modeling & Data Fetching — Design PostgreSQL schema in Supabase with Prisma models. Configure relations, indexes, and type-safe Server Actions.",
+            "05 → Phase 5: Auth & Feature Integrations — Wire up session middleware, protect private routes, integrate payment checkouts or third-party webhooks, and add toast notifications.",
+            "06 → Phase 6: QA, Optimization & Vercel Deployment — Audit Lighthouse scores, optimize image formats (WebP/AVIF), and deploy to Vercel with automated branch preview environments."
+        ];
+
+        const codingPrompt = `You are an elite principal full-stack engineer and UI designer. Build a complete, production-grade web application based on this project specification:\n\n### PROJECT GOAL\n"${description}"\n\n### TARGET TECH STACK\n- Framework: Next.js 15+ (App Router, React 19, TypeScript)\n- Styling: Tailwind CSS (Dark aesthetic, clean glassmorphism, subtle borders)\n- UI Primitives: shadcn/ui (Radix UI) + Lucide Icons\n- Motion & Animation: Motion (Framer Motion) for scroll triggers and stagger effects\n- Backend & Database: Supabase PostgreSQL + Prisma ORM\n- Deployment: Vercel\n\n### ARCHITECTURE & DIRECTORY STRUCTURE\nScaffold following this modular layout:\n\`\`\`text\nsrc/\n├── app/\n│   ├── layout.tsx         # Root layout with dark theme provider and fonts\n│   ├── page.tsx           # Main landing / storefront page with scroll sections\n│   ├── api/               # Serverless Route Handlers\n│   └── globals.css        # Tailwind variables and ambient background glows\n├── components/\n│   ├── ui/                # shadcn primitives (Button, Card, Badge, Dialog)\n│   ├── navigation/        # Interactive floating navbar & responsive drawer\n│   ├── sections/          # Feature sections, Hero, and interactive cards\n│   └── animations/        # Reusable Framer Motion wrappers (FadeIn, StaggerGrid)\n├── lib/\n│   ├── prisma.ts          # Singleton Prisma client instance\n│   └── utils.ts           # Class merge helper (clsx + tailwind-merge)\n└── types/                 # TypeScript interfaces and schema definitions\n\`\`\`\n\n### IMPLEMENTATION REQUIREMENTS\n1. Visual Polish: Use a premium dark technical aesthetic (#08090d background, #10121a cards, 1px subtle borders #222634, and soft indigo/purple accents).\n2. Card & Scroll Effects: Implement interactive cards with hover scale/tilt, spring physics, dynamic image reveal on hover, and smooth scroll entrance reveals.\n3. Accessibility & Performance: Strict semantic HTML, full keyboard navigation, aria labels, and next/image optimization.\n4. Provide the complete code for the layout, the primary feature component, and the interactive cards. Do not use placeholders.`;
+
+        return {
+            summary: `Comprehensive architectural blueprint engineered for: "${description}". Configured with a modern Next.js 15 App Router architecture, shadcn/ui design system, Motion animation layer, and verified developer tools matched from your toolbox.`,
+            mode: mode,
+            provider: "heuristic",
+            isFallback: true,
+            recommendedStack: stack,
+            matchedTools: topMatches,
+            workflow: workflow,
+            architecture: `A high-performance modern Serverless architecture utilizing Next.js 15 App Router for hybrid SSR/Edge delivery, Supabase PostgreSQL for persistent state and real-time syncing, and client-side Motion springs for 60 FPS scroll-triggered micro-interactions.`,
+            codingPrompt: codingPrompt,
+            nextSteps: [
+                "Initialize your Next.js application: `npx create-next-app@latest my-app --typescript --tailwind --app`",
+                "Initialize your shadcn/ui component library: `npx shadcn@latest init`",
+                "Install animation and icon packages: `npm install motion lucide-react clsx tailwind-merge`",
+                "Set up your Supabase project credentials in `.env.local`",
+                "Paste the generated AI Coding Prompt into Cursor or Claude to scaffold the core components"
+            ],
+            isFallbackNotice: "Notice: Operating in offline toolbox matching mode. To enable Google Gemini AI generation in production, deploy to Vercel with your GEMINI_API_KEY environment variable."
+        };
     }
 
     // Render results into UI
     function renderResults(data) {
         if (!data) return;
+
+        // Model indicator
+        if (modelIndicator) {
+            if (data.provider === 'gemini' || data.modelUsed) {
+                modelIndicator.textContent = `Active Model: ${data.modelUsed || 'Gemini 3.1 Flash'}`;
+            } else if (data.isFallback) {
+                modelIndicator.textContent = 'Mode: Offline Toolbox Matcher (Rule-Based)';
+            }
+        }
 
         // Fallback Notice
         if (data.isFallbackNotice) {

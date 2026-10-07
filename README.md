@@ -84,78 +84,70 @@ quick-links/
 
 ---
 
-## 🔒 Security & API Key Safety
+## 🤖 Gemini AI Assistant Setup
 
-The Google Gemini API key is **strictly handled server-side**:
-- The API key is **never** included in HTML, client JavaScript, GitHub commits, network payloads, or logs.
-- The browser only communicates with the internal endpoint `POST /api/assistant`.
-- The `.gitignore` file excludes all `.env` files to prevent accidental commits.
+The AI Build Assistant connects your 61+ item developer toolbox with Google Gemini to generate production-grade architectures, project-specific tool matches, execution workflows, and copyable coding prompts.
 
----
-
-## ⚙️ Environment Variables
-
-Create a `.env` file in the project root based on `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Set the following variables:
-
-```ini
-# Google Gemini API Key from Google AI Studio (https://aistudio.google.com/app/apikey)
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# Fast interactive model (default: gemini-2.5-flash)
-GEMINI_MODEL=gemini-2.5-flash
-
-# Optional: Local development port (default: 3000)
-PORT=3000
-```
-
-> **Note:** If `GEMINI_API_KEY` is not provided, the assistant automatically runs in **intelligent heuristic fallback mode**, matching keywords and tools from `data/resources.js` without failing.
+### 1. Obtain a Free Gemini API Key
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. Sign in with your Google account.
+3. Click **"Create API key"** and copy the generated key.
 
 ---
 
-## 💻 Local Development
-
-Quick Links has **zero external npm dependencies**. Node.js 18+ is all you need:
-
-1. **Start the local server:**
+### 2. Local Environment Setup
+1. In the root of this project, create a `.env` file (copied from `.env.example`):
    ```bash
+   cp .env.example .env
+   ```
+2. Open `.env` and fill in your key:
+   ```ini
+   GEMINI_API_KEY=your_actual_gemini_api_key_here
+   GEMINI_MODEL=gemini-3.1-flash-lite
+   PORT=3000
+   ```
+3. Start the local server:
+   ```bash
+   npm run dev
+   # or
    npm start
    ```
-   *(or `node server.js`)*
-
-2. **Open in your browser:**
-   - **Toolbox:** [http://localhost:3000](http://localhost:3000)
-   - **AI Build Assistant:** [http://localhost:3000/assistant](http://localhost:3000/assistant)
-   - **API Endpoint:** [http://localhost:3000/api/assistant](http://localhost:3000/api/assistant)
+4. Visit `http://localhost:3000/assistant` and test generating a plan.
 
 ---
 
-## 🚀 Deployment
+### 3. Production Deployment (Vercel)
 
-Because Gemini API keys cannot safely reside in client-side code, Quick Links uses a serverless API layer.
+> [!IMPORTANT]
+> **Why GitHub Repository Secrets Do Not Power Deployed Sites:**
+> GitHub Repository Secrets (`Settings` → `Secrets and variables` → `Actions`) are only available during automated GitHub Actions CI/CD workflows. They **cannot** be read by static websites on GitHub Pages or by third-party hosting services like Vercel.
+> 
+> Furthermore, **GitHub Pages is a static file host** and cannot run Node.js serverless functions (like `/api/assistant.js`). Submitting `POST /api/assistant` on GitHub Pages returns `HTTP 405 Method Not Allowed`.
 
-### Recommended: Deploy to Vercel (All-in-One)
+To run the live Gemini AI Assistant in production, deploy the project to **Vercel**:
 
-Vercel provides native zero-configuration support for static files and the `/api/assistant.js` serverless function:
+1. **Push your code to GitHub** (on your repository branch).
+2. **Log into [Vercel](https://vercel.com)**:
+   - Click **"Add New..."** → **"Project"**.
+   - Select and import your GitHub repository (`quick-links`).
+3. **Configure Environment Variables in Vercel**:
+   - In the **Environment Variables** section of the Vercel project setup (or under **Project Settings** → **Environment Variables**):
+     - **Key:** `GEMINI_API_KEY`  
+       **Value:** `[Paste your Gemini API key]`
+     - **Key:** `GEMINI_MODEL` *(optional)*  
+       **Value:** `gemini-3.1-flash-lite`
+   - Ensure the environments (Production, Preview, Development) are all checked.
+4. **Deploy**:
+   - Click **"Deploy"**.
+   - Vercel will automatically detect `vercel.json` and host your static frontend alongside the serverless function `/api/assistant.js`.
 
-1. Push your repository to GitHub.
-2. Go to [Vercel](https://vercel.com) and click **"Add New Project"** → Import `quick-links`.
-3. Under **Environment Variables**, add:
-   - `GEMINI_API_KEY`: Your Google Gemini API key.
-   - `GEMINI_MODEL`: `gemini-2.5-flash`.
-4. Click **Deploy**. Vercel will host both your frontend and the `/api/assistant` serverless route securely.
+---
 
-### Alternative: GitHub Pages (Frontend) + External Serverless API
+### 4. Live Gemini vs. Offline Fallback Modes
 
-If you prefer keeping the frontend on GitHub Pages:
-1. Deploy the `api/assistant.js` endpoint to Vercel, Render, Railway, or AWS Lambda.
-2. In `assistant/assistant.js`, set `apiUrl` to your hosted serverless endpoint URL.
-3. Deploy the static files (`index.html`, `assistant/`, `data/`) to GitHub Pages via repository Settings → Pages.
+Quick Links provides dual-mode intelligence:
+- **Live Gemini Mode:** When `GEMINI_API_KEY` is present and valid, the assistant uses Google Gemini Flash to generate comprehensive architectural specifications, tailored tool explanations, and long-form coding prompts.
+- **Offline Heuristic Matcher:** If `GEMINI_API_KEY` is absent or if the serverless API is temporarily unreachable, the assistant provides an **Offline Toolbox Matcher** button. This matches keywords and categories directly against `data/resources.js` so you never get a broken UI.
 
 ---
 
