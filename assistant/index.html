@@ -127,7 +127,10 @@
                 <!-- ERROR NOTIFICATION -->
                 <div id="errorState" class="error-banner hidden" role="alert">
                     <span class="error-icon">⚠️</span>
-                    <div class="error-msg" id="errorMsgText">Something went wrong. Please try again.</div>
+                    <div class="error-body">
+                        <div class="error-msg" id="errorMsgText">Something went wrong. Please try again.</div>
+                        <button type="button" id="tryFallbackBtn" class="error-action-btn hidden">⚡ Use Offline Toolbox Matcher Instead</button>
+                    </div>
                     <button type="button" id="dismissErrorBtn" class="dismiss-btn" aria-label="Dismiss error">✕</button>
                 </div>
 

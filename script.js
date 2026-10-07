@@ -226,7 +226,7 @@ function renderResources() {
     toolsGrid.innerHTML = "";
 
     const searchTerm =
-        (searchInput ? searchInput.value : "")
+        ((searchInput && typeof searchInput.value === 'string' ? searchInput.value : ""))
             .toLowerCase()
             .trim();
 

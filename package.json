@@ -2,7 +2,6 @@
   "name": "quick-links",
   "version": "2.0.0",
   "description": "Developer Toolbox, Tech Radar & AI Build Assistant",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"

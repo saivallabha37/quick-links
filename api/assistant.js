@@ -3,7 +3,6 @@
  * QUICK LINKS — AI BUILD ASSISTANT API
  * Serverless / Node.js Endpoint
  * Handles: POST /api/assistant
- * High-depth, production-grade architectural generation
  * =====================================================
  */
 
@@ -17,16 +16,25 @@ let coreStackDb = [];
 let categoriesDb = {};
 
 try {
-    const dataPath = path.resolve(__dirname, '../data/resources.js');
-    if (fs.existsSync(dataPath)) {
-        const data = require(dataPath);
-        resourcesDb = data.resources || [];
-        workflowsDb = data.workflows || [];
-        coreStackDb = data.coreStack || [];
-        categoriesDb = data.categories || {};
-    }
+    // Static require for Vercel bundling
+    const data = require('../data/resources.js');
+    resourcesDb = data.resources || [];
+    workflowsDb = data.workflows || [];
+    coreStackDb = data.coreStack || [];
+    categoriesDb = data.categories || {};
 } catch (err) {
-    console.error('Error loading resources.js in API:', err.message);
+    try {
+        const dataPath = path.join(process.cwd(), 'data', 'resources.js');
+        if (fs.existsSync(dataPath)) {
+            const data = require(dataPath);
+            resourcesDb = data.resources || [];
+            workflowsDb = data.workflows || [];
+            coreStackDb = data.coreStack || [];
+            categoriesDb = data.categories || {};
+        }
+    } catch (fallbackErr) {
+        console.error('Error loading resources.js in API:', fallbackErr.message);
+    }
 }
 
 // Fallback matching engine for offline scenarios with rich, expanded output
@@ -192,6 +200,8 @@ src/
     return {
         summary: `Comprehensive architectural blueprint engineered for: "${description}". Configured with a modern Next.js 15 App Router architecture, shadcn/ui design system, Motion animation layer, and verified developer tools matched from your toolbox.`,
         mode: mode,
+        provider: "heuristic",
+        isFallback: true,
         recommendedStack: stack,
         matchedTools: topMatches,
         workflow: workflow,
@@ -204,7 +214,7 @@ src/
             "Set up your Supabase project credentials in `.env.local`",
             "Paste the generated AI Coding Prompt into Cursor or Claude to scaffold the core components"
         ],
-        isFallbackNotice: "Notice: Operating in heuristic toolbox matching mode. Add GEMINI_API_KEY to your environment (.env) to enable full Google Gemini generative intelligence."
+        isFallbackNotice: "Notice: Operating in heuristic toolbox matching mode. Add GEMINI_API_KEY to your hosting environment variables to enable full Google Gemini Flash generative intelligence."
     };
 }
 
@@ -255,6 +265,7 @@ async function handler(req, res) {
 
     const description = (body.description || '').trim();
     const mode = (body.mode || 'stack').trim();
+    const allowFallback = Boolean(body.fallback);
 
     if (!description) {
         res.statusCode = 400;
@@ -273,16 +284,33 @@ async function handler(req, res) {
         configuredModel,
         "gemini-3.1-flash-lite",
         "gemini-3.5-flash-lite",
+        "gemini-flash-latest",
         "gemini-3.8-flash"
     ].filter((m, i, arr) => arr.indexOf(m) === i);
 
-    // If API key is missing, return high-quality heuristic response cleanly
+    // Logging for debugging (ONLY boolean for key, NEVER log actual key value)
+    console.log(`[Assistant API] Request received for description: "${description.slice(0, 45)}..."`);
+    console.log(`[Assistant API] Gemini configured: ${Boolean(apiKey)}`);
+    console.log(`[Assistant API] Gemini model: ${configuredModel}`);
+
+    // If API key is missing
     if (!apiKey) {
-        console.warn('GEMINI_API_KEY not found in environment. Using intelligent toolbox matcher fallback.');
-        const fallbackData = generateFallbackResponse(description, mode);
-        res.statusCode = 200;
+        if (allowFallback) {
+            console.log('[Assistant API] Falling back to heuristic matching (explicitly requested).');
+            const fallbackData = generateFallbackResponse(description, mode);
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(fallbackData));
+            return;
+        }
+
+        console.warn('[Assistant API] GEMINI_API_KEY is not configured on the server.');
+        res.statusCode = 503;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(fallbackData));
+        res.end(JSON.stringify({
+            error: "Gemini API key is not configured on the server. Please add GEMINI_API_KEY to your environment variables.",
+            fallbackAvailable: true
+        }));
         return;
     }
 
@@ -376,6 +404,9 @@ Please analyze this requirement, select the optimal stack, match against my Quic
         }
     };
 
+    let lastError = null;
+    let lastStatus = null;
+
     // Try candidate models in order
     for (const model of candidateModels) {
         try {
@@ -387,26 +418,52 @@ Please analyze this requirement, select the optimal stack, match against my Quic
                 body: JSON.stringify(requestPayload)
             });
 
+            console.log(`[Assistant API] Model ${model} response status: ${response.status}`);
+
             if (!response.ok) {
-                const errStatus = response.status;
+                lastStatus = response.status;
                 let errDetails = '';
                 try {
                     const errJson = await response.json();
                     errDetails = errJson.error?.message || '';
                 } catch (e) {}
 
-                console.warn(`Gemini (${model}) returned status ${errStatus}: ${errDetails}`);
+                console.warn(`[Assistant API] Gemini (${model}) failed with ${response.status}: ${errDetails}`);
 
-                if (errStatus === 429) {
-                    res.statusCode = 429;
+                if (response.status === 401) {
+                    res.statusCode = 401;
                     res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify({ error: "Too many requests. Please wait a moment." }));
+                    res.end(JSON.stringify({
+                        error: "Gemini API request failed: 401 — Invalid or unauthorized API key. Check GEMINI_API_KEY in your hosting environment."
+                    }));
                     return;
                 }
 
-                if (errStatus === 404 || errStatus === 503) {
+                if (response.status === 403) {
+                    res.statusCode = 403;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({
+                        error: "Gemini API request failed: 403 — API key does not have permission for the Gemini Generative Language API."
+                    }));
+                    return;
+                }
+
+                if (response.status === 429) {
+                    res.statusCode = 429;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({
+                        error: "Gemini API request failed: 429 — Rate limit exceeded. Please wait a moment."
+                    }));
+                    return;
+                }
+
+                // If 404 or 503, try next candidate model
+                if (response.status === 404 || response.status === 503) {
+                    lastError = errDetails;
                     continue;
                 }
+
+                lastError = errDetails;
                 break;
             }
 
@@ -418,8 +475,23 @@ Please analyze this requirement, select the optimal stack, match against my Quic
                 const cleaned = rawContent.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim();
                 parsed = JSON.parse(cleaned);
             } catch (jsonErr) {
-                console.error('Failed to parse Gemini response as JSON:', jsonErr.message);
-                break;
+                console.error('[Assistant API] Malformed JSON received from Gemini:', jsonErr.message);
+                res.statusCode = 502;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                    error: "Gemini returned a malformed response. Please try submitting again."
+                }));
+                return;
+            }
+
+            // Validate that required fields exist
+            if (!parsed || typeof parsed !== 'object') {
+                res.statusCode = 502;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({
+                    error: "Gemini returned an invalid response structure."
+                }));
+                return;
             }
 
             // Post-process matchedTools to ensure canonical URLs and metadata from resourcesDb
@@ -449,23 +521,39 @@ Please analyze this requirement, select the optimal stack, match against my Quic
                 });
             }
 
+            // Mark successful Gemini response metadata
+            parsed.provider = "gemini";
+            parsed.modelUsed = model;
+            parsed.isFallback = false;
+
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify(parsed));
             return;
 
         } catch (fetchErr) {
-            console.warn(`Fetch error with model ${model}:`, fetchErr.message);
+            console.warn(`[Assistant API] Fetch error with model ${model}:`, fetchErr.message);
+            lastError = fetchErr.message;
         }
     }
 
-    // Fallback if all models failed
-    console.warn('All Gemini models failed or unavailable. Falling back to rich heuristic matching.');
-    const fallbackData = generateFallbackResponse(description, mode);
-    fallbackData.isFallbackNotice = "Notice: Gemini API temporarily unavailable. Displaying rule-based toolbox matches.";
-    res.statusCode = 200;
+    // If candidate models failed
+    console.error(`[Assistant API] All Gemini candidate models failed. Last error: ${lastError}`);
+    if (allowFallback) {
+        const fallbackData = generateFallbackResponse(description, mode);
+        fallbackData.isFallbackNotice = "Notice: Gemini API temporarily unavailable. Displaying rule-based toolbox matches.";
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(fallbackData));
+        return;
+    }
+
+    res.statusCode = lastStatus || 502;
     res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify(fallbackData));
+    res.end(JSON.stringify({
+        error: `Gemini API request failed (${lastStatus || 502}): ${lastError || 'Service temporarily unavailable. Please try again.'}`,
+        fallbackAvailable: true
+    }));
 }
 
 // Support both CommonJS export for Node/Vercel and default

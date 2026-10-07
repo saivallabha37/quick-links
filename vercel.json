@@ -1,8 +1,17 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/assistant",
+      "destination": "/assistant/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
-    { "source": "/api/assistant", "destination": "/api/assistant.js" }
+    {
+      "source": "/api/assistant",
+      "destination": "/api/assistant.js"
+    }
   ]
 }
-
